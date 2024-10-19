@@ -7,9 +7,21 @@ class VCDCharStream;
 
 enum TokenType {
   NIL  = 0,
+  DateKeyword,
+  VersionKeyword,
   DeclarationKeyword,
   SimulationKeyword,
   EndKeyword,
+  TimescaleKeyword,
+  VarKeyword,
+  ScopeKeyword,
+  EnddefinitionsKeyword, 
+  UpscopeKeyword,
+  CommentKeyword,
+  DumpvarsKeyword,
+  DumpallKeyword,
+  DumponKeyword,
+  DumpoffKeyword,
   ObjectType,
   ObejctSize,
   Punctiation,
@@ -53,7 +65,13 @@ public:
   bool isLetter(char identifier);
   bool isCharInStr(std::string samples, char ch);
   bool isPunctuation(char punctuation);
-  
+  bool isInteger(std::string str);
+  bool isScalarMark(char letter); 
+  bool isVectorBitMark(char letter);
+  bool isVectorRealMark(char letter);
+  bool isIdentifier(std::string str);
+  bool isVectorBitDump(std::string str);
+
   Token readIdentifier();
   Token readSimulationTime();
   Token readNumber();
@@ -64,8 +82,18 @@ public:
   Token peek();
   Token next();
   bool eof();
+  void dbg();
 
 private:
   Token currentToken = {TokenType::NIL};
   VCDCharStream *charStream;
+  
+  /*
+    0 - before enddefinitions
+    1 - expecting scalar or vector value // if read isScalarValue
+    2 - expecting vector identifier
+  */
+  short processingDumps = 0; 
+  bool processingComment = false; 
+
 };

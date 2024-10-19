@@ -1,10 +1,12 @@
 #include "vcd-char-stream.h"
 #include <QtDebug>
 #include <QtLogging>
-#include <qlogging.h>
+#include <ios>
 
 VCDCharStream::VCDCharStream(std::string filepath) {
   this->input.open(filepath);
+  this->input >> std::noskipws;
+
   if (!this->input) {
     qFatal() << "Could not open a file";
     return;

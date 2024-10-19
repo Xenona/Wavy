@@ -1,5 +1,7 @@
 #include "./vcd-token-stream.h"
 #include "vcd-char-stream.h"
+#include <QDebug>
+#include <qlogging.h>
 #include <string>
 
 bool VCDTokenStream::isDigit(char digit) {
@@ -17,14 +19,25 @@ bool VCDTokenStream::isCharInStr(std::string samples, char ch) {
 }
 
 bool VCDTokenStream::isWhiteSpace(char space) {
-  return this->isCharInStr(" \t\n", space);
+  return this->isCharInStr(" \t\n\r", space);
 }
 
 bool VCDTokenStream::isLetter(char identifier) {
-  if (((int)'!' <= identifier && identifier <= (int)'~') &&
-      !(this->isDigit(identifier)) && !(this->isPunctuation(identifier)))
+  if (((int)'!' <= identifier && identifier <= (int)'~'))
     return true;
   return false;
+}
+
+bool VCDTokenStream::isScalarMark(char letter) {
+  return this->isCharInStr("01xXzZ", letter);
+}
+
+bool VCDTokenStream::isVectorBitMark(char letter) {
+  return this->isCharInStr("bB", letter);
+}
+
+bool VCDTokenStream::isVectorRealMark(char letter) {
+  return this->isCharInStr("rR", letter);
 }
 
 bool VCDTokenStream::isPunctuation(char punctuation) {
@@ -33,10 +46,19 @@ bool VCDTokenStream::isPunctuation(char punctuation) {
 
 std::string VCDTokenStream::readWhile(std::function<bool(char)> predicate) {
   std::string str;
+
   while (!this->charStream->eof() && predicate(this->charStream->peek())) {
     str += this->charStream->next();
   }
   return str;
+}
+
+bool VCDTokenStream::isVectorBitDump(std::string str) {
+  for (char c : str) {
+    if (!this->isScalarMark(c))
+      return false;
+  }
+  return true;
 }
 
 Token VCDTokenStream::readNumber() {
@@ -55,23 +77,45 @@ Token VCDTokenStream::readNumber() {
   return {TokenType::Number, number};
 }
 
+bool VCDTokenStream::isInteger(std::string str) {
+  for (char c : str) {
+    if (!this->isDigit(c))
+      return false;
+  }
+  return true;
+}
+
+bool VCDTokenStream::isIdentifier(std::string str) {
+  for (char c : str) {
+    if (!this->isLetter(c))
+      return false;
+  }
+  return true;
+}
+
 Token VCDTokenStream::readIdentifier() {
-  return {TokenType::Identifier,
-          this->readWhile([this](char c) { return this->isLetter(c); })};
+  return {TokenType::Identifier, this->readWhile([this](char c) {
+            return this->isLetter(c) || this->isDigit(c) ||
+                   this->isPunctuation(c);
+          })};
 }
 
 Token VCDTokenStream::readNext() {
-  this->readWhile([this](char c) { return this->isWhiteSpace(c); });
+  auto a = this->readWhile([this](char c) { return this->isWhiteSpace(c); });
   if (this->charStream->eof())
     return {};
   char ch = this->charStream->peek();
-  if (this->isLetter(ch))
+  if (this->isLetter(ch) || this->isDigit(ch) || this->isPunctuation(ch))
     return readIdentifier();
-  if (this->isDigit(ch))
-    return readNumber();
-  if (this->isPunctuation(ch))
-    return {TokenType::Punctiation, std::string{this->charStream->next()}};
   this->charStream->die("Can't handle character:" + std::string{ch});
+  return {};
+}
+
+void VCDTokenStream::dbg() {
+  while (!this->charStream->eof()) {
+    char ch = this->charStream->next();
+    qDebug() << ch;
+  }
 }
 
 Token VCDTokenStream::peek() {
@@ -83,11 +127,78 @@ Token VCDTokenStream::peek() {
 }
 
 Token VCDTokenStream::next() {
-  Token token = this->currentToken;
+  Token nextToken = this->currentToken;
   this->currentToken = {};
-  if (token.type != TokenType::NIL) {
-    return token;
+  if (nextToken.type != TokenType::NIL) {
+
+    if (nextToken.type == TokenType::Identifier) {
+
+      if (nextToken.value == "$date")
+        return {TokenType::DateKeyword, nextToken.value};
+      if (nextToken.value == "$end") {
+        this->processingComment = false;
+        return {TokenType::EndKeyword, nextToken.value};
+      }
+      if (nextToken.value == "$version")
+        return {TokenType::VersionKeyword, nextToken.value};
+      if (nextToken.value == "$timescale")
+        return {TokenType::TimescaleKeyword, nextToken.value};
+      if (nextToken.value == "$comment") {
+        this->processingComment = true;
+        return {TokenType::CommentKeyword, nextToken.value};
+      }
+      if (nextToken.value == "$scope")
+        return {TokenType::ScopeKeyword, nextToken.value};
+      if (nextToken.value == "$upscope")
+        return {TokenType::UpscopeKeyword, nextToken.value};
+      if (nextToken.value == "$var")
+        return {TokenType::VarKeyword, nextToken.value};
+      if (nextToken.value == "$enddefinitions") {
+        this->processingDumps = 1;
+        return {TokenType::EnddefinitionsKeyword, nextToken.value};
+      }
+      if (nextToken.value == "$dumpvars")
+        return {TokenType::DumpvarsKeyword, nextToken.value};
+      if (nextToken.value == "$dumpall")
+        return {TokenType::DumpallKeyword, nextToken.value};
+      if (nextToken.value == "$dumpon")
+        return {TokenType::DumponKeyword, nextToken.value};
+      if (nextToken.value == "$dumpoff")
+        return {TokenType::DumpoffKeyword, nextToken.value};
+      if (nextToken.value[0] == '#' &&
+          this->isInteger(nextToken.value.substr(1))) {
+        if (this->processingDumps == 2)
+          this->charStream->die("Vector value has no identifier");
+        if (this->processingDumps == 1)
+          return {TokenType::SimulationTime, nextToken.value.substr(1)};
+        else
+          return {TokenType::Identifier, nextToken.value};
+      }
+
+      if (this->processingDumps == 0) {
+
+      } else if (this->processingDumps == 1) {
+
+        if (this->isScalarMark(nextToken.value[0]) &&
+            this->isIdentifier(nextToken.value.substr(1)))
+          return {TokenType::ScalarValueChange, nextToken.value};
+        else if (this->isVectorBitMark(nextToken.value[0]) &&
+                 this->isVectorBitDump(nextToken.value.substr(1))) {
+          this->processingDumps = 2;
+          return {TokenType::VectorValueChange, nextToken.value};
+        } else if (!this->processingComment) {
+          this->charStream->die("Wrong data token.");
+        }
+
+      } else if (this->processingDumps == 2) {
+        this->processingDumps = 1;
+        return {TokenType::Identifier, nextToken.value};
+      }
+    }
+
+    return nextToken;
   }
+
   return readNext();
 }
 
