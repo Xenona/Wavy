@@ -1,4 +1,5 @@
 #pragma once
+
 #include <functional>
 #include <string>
 
@@ -49,18 +50,19 @@ public:
   static bool isVectorBitDump(std::string str);
   static bool isReal(std::string str);
 
-  Token readIdentifier();
-  Token readSimulationTime();
-  Token readNext();
-
-  std::string readWhile(std::function<bool(char)> predicate);
-
   Token peek();
   Token next();
   bool eof();
   void dbg();
 
 private:
+
+  Token readIdentifier();
+  Token readSimulationTime();
+  Token readNext();
+
+  std::string readWhile(std::function<bool(char)> predicate);
+
   Token currentToken = {TokenType::NIL};
   VCDCharStream *charStream;
   

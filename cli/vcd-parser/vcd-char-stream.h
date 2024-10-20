@@ -16,6 +16,7 @@ public:
   void logState();
 
 private:
+
   int column = 0;
   int line = 1;
 

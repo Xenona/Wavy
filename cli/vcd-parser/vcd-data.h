@@ -83,13 +83,13 @@ struct TimestampData {
 class VCDData {
 
 public:
+
   DateData date;
   VersionData version;
   TimescaleData timescale;
   std::vector<CommentData> comments;
   std::vector<ScopeData> scopes;
   std::vector<TimestampData> timepoints;
-
   std::vector<std::string> errors;
   std::vector<std::string> warns;
 };

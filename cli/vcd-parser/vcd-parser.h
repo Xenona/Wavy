@@ -23,15 +23,15 @@ class VCDParser {
 
 public:
  
-
   VCDData* getVCDData(VCDTokenStream* tokenStream);
   void dbg(VCDTokenStream* s);
+
+private:
+
   void error(std::string message);
   void warn(std::string message);
 
-private:
   VCDTokenStream* tokenStream;
   VCDData* vcd;
-  ParserState state = ParserState::Header;
-
+  ParserState state;
 };
