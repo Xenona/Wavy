@@ -19,7 +19,7 @@ bool VCDTokenStream::isCharInStr(std::string samples, char ch) {
 }
 
 bool VCDTokenStream::isWhiteSpace(char space) {
-  return this->isCharInStr(" \t\n\r", space);
+  return VCDTokenStream::isCharInStr(" \t\n\r", space);
 }
 
 bool VCDTokenStream::isLetter(char identifier) {
@@ -29,19 +29,15 @@ bool VCDTokenStream::isLetter(char identifier) {
 }
 
 bool VCDTokenStream::isScalarMark(char letter) {
-  return this->isCharInStr("01xXzZ", letter);
+  return VCDTokenStream::isCharInStr("01xXzZ", letter);
 }
 
 bool VCDTokenStream::isVectorBitMark(char letter) {
-  return this->isCharInStr("bB", letter);
+  return VCDTokenStream::isCharInStr("bB", letter);
 }
 
 bool VCDTokenStream::isVectorRealMark(char letter) {
-  return this->isCharInStr("rR", letter);
-}
-
-bool VCDTokenStream::isPunctuation(char punctuation) {
-  return this->isCharInStr("[:]", punctuation);
+  return VCDTokenStream::isCharInStr("rR", letter);
 }
 
 std::string VCDTokenStream::readWhile(std::function<bool(char)> predicate) {
@@ -55,31 +51,15 @@ std::string VCDTokenStream::readWhile(std::function<bool(char)> predicate) {
 
 bool VCDTokenStream::isVectorBitDump(std::string str) {
   for (char c : str) {
-    if (!this->isScalarMark(c))
+    if (!VCDTokenStream::isScalarMark(c))
       return false;
   }
   return true;
 }
 
-Token VCDTokenStream::readNumber() {
-  bool *isFloat = new bool(false);
-  std::string number = readWhile([this, &isFloat](char c) {
-    if (c == '.') {
-      if (isFloat)
-        return false;
-      delete isFloat;
-      isFloat = new bool(true);
-      return true;
-    }
-    return this->isDigit(c);
-  });
-  delete isFloat;
-  return {TokenType::Number, number};
-}
-
 bool VCDTokenStream::isInteger(std::string str) {
   for (char c : str) {
-    if (!this->isDigit(c))
+    if (!VCDTokenStream::isDigit(c))
       return false;
   }
   return true;
@@ -87,17 +67,28 @@ bool VCDTokenStream::isInteger(std::string str) {
 
 bool VCDTokenStream::isIdentifier(std::string str) {
   for (char c : str) {
-    if (!this->isLetter(c))
+    if (!VCDTokenStream::isLetter(c))
       return false;
   }
   return true;
 }
 
 Token VCDTokenStream::readIdentifier() {
-  return {TokenType::Identifier, this->readWhile([this](char c) {
-            return this->isLetter(c) || this->isDigit(c) ||
-                   this->isPunctuation(c);
-          })};
+  return {TokenType::Identifier,
+          this->readWhile([this](char c) { return this->isLetter(c); })};
+}
+
+bool VCDTokenStream::isReal(std::string str) {
+  bool hasDot = false;
+  for (char c : str) {
+    if (c == '.') {
+      if (hasDot)
+        return false;
+      hasDot = true;
+    } else if (!VCDTokenStream::isDigit(c))
+      return false;
+  }
+  return true;
 }
 
 Token VCDTokenStream::readNext() {
@@ -105,7 +96,7 @@ Token VCDTokenStream::readNext() {
   if (this->charStream->eof())
     return {};
   char ch = this->charStream->peek();
-  if (this->isLetter(ch) || this->isDigit(ch) || this->isPunctuation(ch))
+  if (this->isLetter(ch))
     return readIdentifier();
   this->charStream->die("Can't handle character:" + std::string{ch});
   return {};
@@ -186,7 +177,13 @@ Token VCDTokenStream::next() {
                  this->isVectorBitDump(nextToken.value.substr(1))) {
           this->processingDumps = 2;
           return {TokenType::VectorValueChange, nextToken.value};
-        } else if (!this->processingComment) {
+        } else if (this->isVectorRealMark(nextToken.value[0]) &&
+                   this->isReal(nextToken.value.substr(1))) {
+          this->processingDumps = 2;
+          return {TokenType::VectorValueChange, nextToken.value};
+        }
+
+        else if (!this->processingComment) {
           this->charStream->die("Wrong data token.");
         }
 

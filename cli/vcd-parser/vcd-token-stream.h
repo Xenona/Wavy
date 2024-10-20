@@ -1,16 +1,13 @@
 #pragma once
 #include <functional>
 #include <string>
-#include <vector>
 
 class VCDCharStream;
 
-enum TokenType {
+enum class TokenType {
   NIL  = 0,
   DateKeyword,
   VersionKeyword,
-  DeclarationKeyword,
-  SimulationKeyword,
   EndKeyword,
   TimescaleKeyword,
   VarKeyword,
@@ -22,11 +19,6 @@ enum TokenType {
   DumpallKeyword,
   DumponKeyword,
   DumpoffKeyword,
-  ObjectType,
-  ObejctSize,
-  Punctiation,
-  Number,
-  Operator,
   ScalarValueChange,
   VectorValueChange,
   SimulationTime,
@@ -41,40 +33,24 @@ struct Token {
 class VCDTokenStream {
 
 public:
-  const std::vector<std::string> declarationKeywords = {
-      "$comment", "$date", "$enddefinitions", "$scope", "$timescale",
-      "$upscope", "$var",  "$version",
-  };
-  const std::vector<std::string> simulationKeywords = {
-      "$dumpall",
-      "$dumpoff",
-      "$dumpon",
-      "$dumpvars",
-  };
-
-  const std::vector<std::string> objectTypes = {
-      "wire", "reg", "trired"
-      // TODO add more
-  };
-
+  
   VCDTokenStream(VCDCharStream *charStream);
   ~VCDTokenStream();
 
-  bool isDigit(char digit);
-  bool isWhiteSpace(char space);
-  bool isLetter(char identifier);
-  bool isCharInStr(std::string samples, char ch);
-  bool isPunctuation(char punctuation);
-  bool isInteger(std::string str);
-  bool isScalarMark(char letter); 
-  bool isVectorBitMark(char letter);
-  bool isVectorRealMark(char letter);
-  bool isIdentifier(std::string str);
-  bool isVectorBitDump(std::string str);
+  static bool isDigit(char digit);
+  static bool isWhiteSpace(char space);
+  static bool isLetter(char identifier);
+  static bool isCharInStr(std::string samples, char ch);
+  static bool isInteger(std::string str);
+  static bool isScalarMark(char letter); 
+  static bool isVectorBitMark(char letter);
+  static bool isVectorRealMark(char letter);
+  static bool isIdentifier(std::string str);
+  static bool isVectorBitDump(std::string str);
+  static bool isReal(std::string str);
 
   Token readIdentifier();
   Token readSimulationTime();
-  Token readNumber();
   Token readNext();
 
   std::string readWhile(std::function<bool(char)> predicate);

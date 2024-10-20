@@ -1,9 +1,7 @@
 #pragma once
-#include <memory>
+
 #include <string>
 #include <vector>
-
-namespace VCD {
 
 struct DateData {
   std::string date;
@@ -22,28 +20,27 @@ struct CommentData {
   std::string comment;
 };
 
-enum VarTypes {
-  NO, 
-  event,
-  integer,
-  parameter,
-  real,
-  realtime,
-  reg,
-  supply0,
-  supply1,
-  time,
-  tri,
-  triand,
-  trior,
-  trireg,
-  tri0,
-  tri1,
-  wand,
-  wire,
-  wor
+enum class VarTypes {
+  NIL,
+  Event,
+  Integer,
+  Parameter,
+  Real,
+  Realtime,
+  Reg,
+  Supply0,
+  Supply1,
+  Time,
+  Tri,
+  Triand,
+  Trior,
+  Trireg,
+  Tri0,
+  Tri1,
+  Wand,
+  Wire,
+  Wor
 };
-
 struct VarData {
   VarTypes type;
   int size;
@@ -51,8 +48,7 @@ struct VarData {
   std::string trueName;
 };
 
-enum ScopeTypes { NIL, BEGIN, FORK, FUNCTION, MODULE, TASK, UNDEFINED };
-
+enum class ScopeTypes { NIL, Begin, Fork, Function, Module, Task, Undefined };
 struct ScopeData {
   ScopeTypes type;
   std::string ID;
@@ -72,7 +68,7 @@ struct ScalarValueChangeData {
   std::string identifier;
 };
 
-enum DumpType { REGULAR, VARS, ALL, OFF, ON };
+enum class DumpType { NIL, Vars, All, Off, On };
 struct DumpData {
   DumpType type;
   std::vector<VectorValueChangeData> vecs;
@@ -87,7 +83,6 @@ struct TimestampData {
 class VCDData {
 
 public:
-
   DateData date;
   VersionData version;
   TimescaleData timescale;
@@ -98,5 +93,3 @@ public:
   std::vector<std::string> errors;
   std::vector<std::string> warns;
 };
-
-} // namespace VCD
