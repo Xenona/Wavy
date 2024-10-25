@@ -11,7 +11,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
 qt_add_executable(wavy_gui  
-  main.cpp mainwindow.cpp mainwindow.h mainwindow.ui
+  gui/main.cpp
+  gui/mainwindow.cpp
 )
 
 target_link_libraries(wavy_gui PRIVATE Qt6::Widgets)
