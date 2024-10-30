@@ -21,5 +21,6 @@ private slots:
   void onClick();
 
 protected:
-  Ui::MainWindow *ui;
+ Ui::MainWindow *ui;
 };
+

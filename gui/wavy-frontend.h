@@ -1,15 +1,19 @@
 #pragma once
+#include "../lib/vcd-parser/vcd-data.h"
 #include <qboxlayout.h>
+#include <qobject.h>
 #include <qscrollarea.h>
 #include <qtabwidget.h>
+#include <qtmetamacros.h>
 #include <qtoolbutton.h>
 #include <qtreeview.h>
 #include <string>
 #include <ui_mainwindow.h>
 #include <vector>
-#include "../lib/vcd-parser/vcd-data.h"
 
-class WavyFrontend {
+
+class WavyFrontend: QObject {
+Q_OBJECT
 
 public:
   WavyFrontend(Ui::MainWindow *ui);
@@ -27,7 +31,6 @@ public:
   QAction *action_save;
 
   void loadVCDData(std::string path);
-
 
 private:
   Ui::MainWindow *ui;

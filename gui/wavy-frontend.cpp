@@ -1,6 +1,10 @@
 #include "wavy-frontend.h"
+#include "../lib/vcd-parser/vcd-char-stream.h"
+#include "../lib/vcd-parser/vcd-token-stream.h"
 #include "ui_mainwindow.h"
+#include <qaction.h>
 #include <string>
+#include <QFileDialog>
 
 WavyFrontend::WavyFrontend(Ui::MainWindow *ui) {
   this->ui = ui;
@@ -15,10 +19,12 @@ WavyFrontend::WavyFrontend(Ui::MainWindow *ui) {
   this->waveform_scroll = ui->waveform_scroll;
   this->action_open = ui->action_open;
   this->action_save = ui->action_save;
+
+  QObject::connect(ui->action_open, &QAction::triggered, this, [this]() {
+    std::string filename = QFileDialog::getOpenFileName(this, tr("Open VCD file"), "", tr("VCD files (*.vcd);;All Files (*)"))
+  });
 }
 
 void loadVCDData(std::string path) {
-  auto vcdTokenStream = new VCDTokenStream(new VCDCharStream(path))
+  auto vcdTokenStream = new VCDTokenStream(new VCDCharStream(path));
 }
-
-

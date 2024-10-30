@@ -46,7 +46,7 @@
         <enum>QTabWidget::West</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="sidebar_objects">
         <attribute name="title">
@@ -388,6 +388,12 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
            <widget class="QTabWidget" name="waveform_tabs">
             <property name="currentIndex">
              <number>-1</number>
+            </property>
+            <property name="tabsClosable">
+             <bool>true</bool>
+            </property>
+            <property name="movable">
+             <bool>true</bool>
             </property>
            </widget>
           </item>

@@ -23,13 +23,13 @@ MACOSX_BUNDLE ON
 )
 
 qt_add_executable(wavy_vcd-parser
-  cli/vcd-parser/top-vcd-parser.cpp
+  lib/vcd-parser/top-vcd-parser.cpp
 )
 
 qt_add_library(vcd-parser SHARED 
-  cli/vcd-parser/vcd-parser.cpp
-  cli/vcd-parser/vcd-char-stream.cpp
-  cli/vcd-parser/vcd-token-stream.cpp
+  lib/vcd-parser/vcd-parser.cpp
+  lib/vcd-parser/vcd-char-stream.cpp
+  lib/vcd-parser/vcd-token-stream.cpp
 )
 
 target_link_libraries(wavy_vcd-parser PRIVATE vcd-parser)
