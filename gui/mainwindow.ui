@@ -29,7 +29,7 @@
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
-      <widget class="QTabWidget" name="tabWidget">
+      <widget class="QTabWidget" name="sidebar">
        <property name="minimumSize">
         <size>
          <width>150</width>
@@ -46,7 +46,7 @@
         <enum>QTabWidget::West</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="sidebar_objects">
         <attribute name="title">
@@ -153,7 +153,11 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
               <number>0</number>
              </property>
              <item>
-              <layout class="QVBoxLayout" name="sidebar_objects_list"/>
+              <layout class="QVBoxLayout" name="sidebar_objects_list">
+               <item>
+                <widget class="QListWidget" name="objects_list"/>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -268,7 +272,11 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
               <number>0</number>
              </property>
              <item>
-              <layout class="QVBoxLayout" name="sidebar_scope_list"/>
+              <layout class="QVBoxLayout" name="sidebar_scope_list">
+               <item>
+                <widget class="QTreeView" name="scope_tree"/>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -323,7 +331,11 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
            <number>0</number>
           </property>
           <item>
-           <layout class="QVBoxLayout" name="selected_dumps_list"/>
+           <layout class="QVBoxLayout" name="selected_dumps_list">
+            <item>
+             <widget class="QListWidget" name="dumps_list"/>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -400,12 +412,12 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
     <property name="title">
      <string>File...</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionSave"/>
+    <addaction name="action_open"/>
+    <addaction name="action_save"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
-  <action name="actionOpen">
+  <action name="action_open">
    <property name="icon">
     <iconset theme="save"/>
    </property>
@@ -419,7 +431,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="action_save">
    <property name="icon">
     <iconset theme="save"/>
    </property>
@@ -435,7 +447,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
   </action>
  </widget>
  <tabstops>
-  <tabstop>tabWidget</tabstop>
+  <tabstop>sidebar</tabstop>
  </tabstops>
  <resources/>
  <connections/>

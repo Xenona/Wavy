@@ -4,6 +4,7 @@
 #include <QtDebug>
 #include <QtLogging>
 #include <cctype>
+#include <exception>
 #include <qdebug.h>
 #include <stack>
 #include <string>
@@ -11,12 +12,22 @@
 int test(int a) { return a; }
 
 VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
-  this->vcd = new VCDData();
+  this->reset();
+  VCDData *vcd = new VCDData();
   this->tokenStream = tokenStream;
   std::stack<ScopeData> scopes;
 
   while (this->tokenStream->peek().type != TokenType::NIL) {
-    Token token = this->tokenStream->next();
+    Token token;
+    try {
+      token = this->tokenStream->next();
+    } catch (const std::exception &e) {
+      this->error(std::string{"An error happened during parsing: "} + e.what(),
+                  vcd);
+    } catch (...) {
+      qFatal() << "An unhandled exception in vcd-parser. Seems like token "
+                  "stream failed.";
+    }
     switch (this->state) {
 
     case (ParserState::Header): {
@@ -49,7 +60,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       }
 
       default: {
-        this->warn("Could not handle " + token.value + " in IDLE");
+        this->warn("Could not handle " + token.value + " in IDLE", vcd);
       }
       };
       break;
@@ -58,57 +69,56 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Data): {
       switch (token.type) {
       case (TokenType::SimulationTime): {
-        this->vcd->timepoints.push_back(
-            {.time = stoi(token.value), .data = {}});
+        vcd->timepoints.push_back({.time = stoi(token.value), .data = {}});
         break;
       }
 
       case (TokenType::CommentKeyword): {
         this->state = ParserState::Comment;
-        this->vcd->comments.push_back({""});
+        vcd->comments.push_back({""});
         break;
       };
 
       case (TokenType::ScalarValueChange): {
-        this->vcd->timepoints.back().data.scals.push_back(
+        vcd->timepoints.back().data.scals.push_back(
             {.value = token.value[0], .identifier = token.value.substr(1)});
         break;
       }
 
       case (TokenType::VectorValueChange): {
-        this->vcd->timepoints.back().data.vecs.push_back(
+        vcd->timepoints.back().data.vecs.push_back(
             {.type = token.value[0], .valueVec = token.value.substr(1)});
         break;
       }
 
       case (TokenType::Identifier): {
-        this->vcd->timepoints.back().data.vecs.back().identifier = token.value;
+        vcd->timepoints.back().data.vecs.back().identifier = token.value;
         break;
       }
 
       case (TokenType::DumpallKeyword): {
-        this->vcd->timepoints.back().data.type = DumpType::All;
+        vcd->timepoints.back().data.type = DumpType::All;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumponKeyword): {
-        this->vcd->timepoints.back().data.type = DumpType::On;
+        vcd->timepoints.back().data.type = DumpType::On;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumpoffKeyword): {
-        this->vcd->timepoints.back().data.type = DumpType::Off;
+        vcd->timepoints.back().data.type = DumpType::Off;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumpvarsKeyword): {
 
-        this->vcd->timepoints.back().data.type = DumpType::Vars;
+        vcd->timepoints.back().data.type = DumpType::Vars;
         this->state = ParserState::Dumps;
         break;
       }
       default: {
-        this->warn("Could not handle " + token.value + " in READING_DATA");
+        this->warn("Could not handle " + token.value + " in READING_DATA", vcd);
       }
       }
       break;
@@ -118,7 +128,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Header;
       } else {
-        this->vcd->date.date += token.value + " ";
+        vcd->date.date += token.value + " ";
       }
       break;
     }
@@ -127,7 +137,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Data;
       } else {
-        this->warn("$enddefinitions should not contain any tokens.");
+        this->warn("$enddefinitions should not contain any tokens.", vcd);
       }
       break;
     }
@@ -136,7 +146,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Header;
       } else {
-        this->vcd->version.version += token.value + " ";
+        vcd->version.version += token.value + " ";
       }
       break;
     }
@@ -145,7 +155,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Data;
       } else {
-        this->vcd->comments.back().comment += token.value + " ";
+        vcd->comments.back().comment += token.value + " ";
       }
       break;
     }
@@ -155,10 +165,10 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
         this->state = ParserState::Header;
       } else {
         if (this->tokenStream->isInteger(token.value)) {
-          this->vcd->timescale.precision = stoi(token.value);
+          vcd->timescale.precision = stoi(token.value);
         } else if (token.type == TokenType::Identifier) {
-          if (this->vcd->timescale.precision) {
-            this->vcd->timescale.unit = token.value;
+          if (vcd->timescale.precision) {
+            vcd->timescale.unit = token.value;
           } else {
             std::string precision;
             for (char c : token.value) {
@@ -167,17 +177,17 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
                 continue;
               }
               if (this->tokenStream->isLetter(c)) {
-                this->vcd->timescale.unit += c;
+                vcd->timescale.unit += c;
               }
             }
-            this->vcd->timescale.precision = stoi(precision);
-            if (this->vcd->timescale.unit != "s" &&
-                this->vcd->timescale.unit != "ms" &&
-                this->vcd->timescale.unit != "us" &&
-                this->vcd->timescale.unit != "ns" &&
-                this->vcd->timescale.unit != "ps") {
-              this->error("Timescale units are incorrect, using default (ns) instead");
-              this->vcd->timescale.unit = "ns";
+            vcd->timescale.precision = stoi(precision);
+            if (vcd->timescale.unit != "s" && vcd->timescale.unit != "ms" &&
+                vcd->timescale.unit != "us" && vcd->timescale.unit != "ns" &&
+                vcd->timescale.unit != "ps") {
+              this->error(
+                  "Timescale units are incorrect, using default (ns) instead",
+                  vcd);
+              vcd->timescale.unit = "ns";
             }
           }
         }
@@ -199,7 +209,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
           else if (token.value == "task")
             scopes.top().type = ScopeTypes::Task;
           else {
-            this->warn("Scope has wrong type.");
+            this->warn("Scope has wrong type.", vcd);
             scopes.top().type = ScopeTypes::Undefined;
           }
         } else if (scopes.top().name == "") {
@@ -211,7 +221,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
 
         else
           this->warn(
-              "Scope declaration has excess values which are to be ignored.");
+              "Scope declaration has excess values which are to be ignored.",
+              vcd);
       } else if (token.type == TokenType::EndKeyword) {
         if (scopes.empty())
           this->state = ParserState::Header;
@@ -221,7 +232,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       } else if (token.type == TokenType::ScopeKeyword) {
         scopes.push({.parentScopeID = scopes.top().ID});
       } else if (token.type == TokenType::UpscopeKeyword) {
-        this->vcd->scopes.push_back(scopes.top());
+        vcd->scopes.push_back(scopes.top());
         scopes.pop();
       }
       break;
@@ -277,7 +288,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
           scopes.top().vars.back().trueName = token.value;
         } else {
           this->warn(
-              "Var declaration has excess tokens which are to be ignored.");
+              "Var declaration has excess tokens which are to be ignored.",
+              vcd);
         }
       } else if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Scope;
@@ -288,13 +300,13 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Dumps): {
 
       if (token.type == TokenType::ScalarValueChange) {
-        this->vcd->timepoints.back().data.scals.push_back(
+        vcd->timepoints.back().data.scals.push_back(
             {.value = token.value[0], .identifier = token.value.substr(1)});
       } else if (token.type == TokenType::VectorValueChange) {
-        this->vcd->timepoints.back().data.vecs.push_back(
+        vcd->timepoints.back().data.vecs.push_back(
             {.type = token.value[0], .valueVec = token.value.substr(1)});
       } else if (token.type == TokenType::Identifier) {
-        this->vcd->timepoints.back().data.vecs.back().identifier = token.value;
+        vcd->timepoints.back().data.vecs.back().identifier = token.value;
       } else if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Data;
       }
@@ -303,15 +315,23 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     }
   }
 
-  return this->vcd;
+  return vcd;
 };
 
-void VCDParser::error(std::string message) {
-  this->vcd->errors.push_back(message);
+void VCDParser::error(std::string message, VCDData *vcd) {
+  vcd->errors.push_back(message);
 }
 
-void VCDParser::warn(std::string message) {
-  this->vcd->warns.push_back(message);
+void VCDParser::warn(std::string message, VCDData *vcd) {
+  vcd->warns.push_back(message);
+}
+
+void VCDParser::reset() {
+  if (this->tokenStream != nullptr) {
+    delete this->tokenStream;
+    this->tokenStream = nullptr;
+  }
+  this->state = ParserState::Header;
 }
 
 void VCDParser::dbg(VCDTokenStream *s) {
