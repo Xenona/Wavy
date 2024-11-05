@@ -1,5 +1,5 @@
 #include "./vcd-token-stream.h"
-#include "vcd-char-stream.h"
+#include "./vcd-char-stream.h"
 #include <QDebug>
 #include <qlogging.h>
 #include <string>
@@ -156,7 +156,7 @@ Token VCDTokenStream::next() {
         return {TokenType::DumponKeyword, nextToken.value};
       if (nextToken.value == "$dumpoff")
         return {TokenType::DumpoffKeyword, nextToken.value};
-      if (nextToken.value[0] == '#' &&
+      if (nextToken.value[0] == '#' && (nextToken.value.length() > 1) &&
           this->isInteger(nextToken.value.substr(1))) {
         if (this->processingDumps == 2)
           this->charStream->die("Vector value has no identifier");
