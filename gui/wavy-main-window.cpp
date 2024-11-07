@@ -82,7 +82,6 @@ void WavyMainWindow::loadVCDData(std::string path) {
     this->vcdDataFiles.insert(qstring_path, {VCDData, tab, treeWidget});
     this->_VCDDataActive = qstring_path;
   }
-    // TODO callsetVCDDataActive;
   this->setVCDDataActive(qstring_path);
 }
 

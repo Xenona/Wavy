@@ -9,8 +9,6 @@
 #include <stack>
 #include <string>
 
-int test(int a) { return a; }
-
 VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
   this->reset();
   VCDData *vcd = new VCDData();
