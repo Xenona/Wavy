@@ -12,10 +12,9 @@ qt_standard_project_setup()
 
 qt_add_executable(wavy_gui  
   gui/main.cpp
-  gui/mainwindow.cpp
+  gui/wavy-main-window.cpp
 )
 
-target_link_libraries(wavy_gui PRIVATE Qt6::Widgets)
 
 set_target_properties(wavy_gui PROPERTIES
 WIN32_EXECUTABLE ON
@@ -30,9 +29,10 @@ qt_add_library(vcd-parser SHARED
   lib/vcd-parser/vcd-parser.cpp
   lib/vcd-parser/vcd-char-stream.cpp
   lib/vcd-parser/vcd-token-stream.cpp
-)
-
-target_link_libraries(wavy_vcd-parser PRIVATE vcd-parser)
+  )
+  
+  target_link_libraries(wavy_vcd-parser PRIVATE vcd-parser)
+  target_link_libraries(wavy_gui PRIVATE Qt6::Widgets vcd-parser)
 target_link_libraries(vcd-parser PUBLIC Qt6::Widgets Qt6::Core)
 set_target_properties(wavy_vcd-parser PROPERTIES
     WIN32_EXECUTABLE ON

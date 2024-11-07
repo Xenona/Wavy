@@ -216,7 +216,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
 
           scopes.top().name = token.value;
           scopes.top().ID = std::to_string(scopes.size()) +
-                            std::to_string(scopes.top().name.length());
+                            std::to_string(scopes.top().name.length()) +
+                            std::to_string((int)token.type);
         }
 
         else
@@ -239,7 +240,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     }
 
     case (ParserState::ScopeVar): {
-      if (this->tokenStream->isInteger(token.value)) {
+      if (this->tokenStream->isInteger(token.value) && !scopes.top().vars.back().size) {
         scopes.top().vars.back().size = std::stoi(token.value);
       } else if (token.type == TokenType::Identifier) {
         if (scopes.top().vars.back().type == VarTypes::NIL) {
@@ -288,7 +289,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
           scopes.top().vars.back().trueName = token.value;
         } else {
           this->warn(
-              "Var declaration has excess tokens which are to be ignored.",
+              "Var declaration has excess tokens which are to be ignored. " + token.value,
               vcd);
         }
       } else if (token.type == TokenType::EndKeyword) {

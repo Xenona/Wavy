@@ -1,10 +1,9 @@
-#include "mainwindow.h"
-
+#include "wavy-main-window.h"
 #include <QApplication>
 
 int main(int argc, char *argv[]) {
   QApplication a(argc, argv);
-  MainWindow w;
+  WavyMainWindow w;
   w.show();
   return a.exec();
 }
