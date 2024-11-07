@@ -92,12 +92,17 @@ bool VCDTokenStream::isReal(std::string str) {
 }
 
 Token VCDTokenStream::readNext() {
+  // Skips all white spaces, line breaks and tabs.
   auto a = this->readWhile([this](char c) { return this->isWhiteSpace(c); });
+  // return NIL token, if it's the end of the file
   if (this->charStream->eof())
     return {};
+  // if the next char is letter, than we pull the whole word from the stream and return 
   char ch = this->charStream->peek();
   if (this->isLetter(ch))
     return readIdentifier();
+
+  // the char wasn't an allowed letter, throw
   this->charStream->die("Can't handle character:" + std::string{ch});
   return {};
 }
@@ -123,6 +128,11 @@ Token VCDTokenStream::next() {
   if (nextToken.type != TokenType::NIL) {
 
     if (nextToken.type == TokenType::Identifier) {
+      
+      // Here goes a part mentioned in (1) of the class description. 
+      // After all words are split, checked and inferred TokenType::Identifier
+      // by default, we might simplify future parsing by changing keyword type 
+      // right here 
 
       if (nextToken.value == "$date")
         return {TokenType::DateKeyword, nextToken.value};
@@ -135,6 +145,11 @@ Token VCDTokenStream::next() {
       if (nextToken.value == "$timescale")
         return {TokenType::TimescaleKeyword, nextToken.value};
       if (nextToken.value == "$comment") {
+        // Please, refer to (5) of the class description. 
+        // This will help to ignore all the usual words, as 
+        // not ignoring them will break the context tracking 
+        // type of variable dumped, because $comment is in 
+        // the dumps section of the file. Refer to the IEEE Std 1800-2023
         this->processingComment = true;
         return {TokenType::CommentKeyword, nextToken.value};
       }
@@ -145,6 +160,7 @@ Token VCDTokenStream::next() {
       if (nextToken.value == "$var")
         return {TokenType::VarKeyword, nextToken.value};
       if (nextToken.value == "$enddefinitions") {
+        // Here we finish with header and move to the dumps
         this->processingDumps = 1;
         return {TokenType::EnddefinitionsKeyword, nextToken.value};
       }
@@ -156,16 +172,25 @@ Token VCDTokenStream::next() {
         return {TokenType::DumponKeyword, nextToken.value};
       if (nextToken.value == "$dumpoff")
         return {TokenType::DumpoffKeyword, nextToken.value};
+
+      // >1 check is required, because `#` might be just an identifier code
       if (nextToken.value[0] == '#' && (nextToken.value.length() > 1) &&
           this->isInteger(nextToken.value.substr(1))) {
+
+        // If we met a timestamp when were waiting (2nd state) for vector 
+        // identifier, that's an error and further parsing cannot be done
         if (this->processingDumps == 2)
           this->charStream->die("Vector value has no identifier");
+        // if state is 1st, then stream just gave a timestamp, so
+        // it's necessary to take the time
         if (this->processingDumps == 1)
           return {TokenType::SimulationTime, nextToken.value.substr(1)};
         else
           return {TokenType::Identifier, nextToken.value};
       }
 
+      // this branch left for understanding we do nothing 
+      // specific in a header section
       if (this->processingDumps == 0) {
 
       } else if (this->processingDumps == 1) {
@@ -184,7 +209,7 @@ Token VCDTokenStream::next() {
         }
 
         else if (!this->processingComment) {
-          this->charStream->die("Wrong data token.");
+          this->charStream->die("Wrong data token: " + nextToken.value);
         }
 
       } else if (this->processingDumps == 2) {
@@ -193,6 +218,7 @@ Token VCDTokenStream::next() {
       }
     }
 
+    // here type will be TokenType::Identifier
     return nextToken;
   }
 
