@@ -14,6 +14,7 @@ qt_add_executable(wavy_gui
   gui/main.cpp
   gui/wavy-main-window.cpp
   gui/vcd-plotter.cpp
+  gui/scope-tree-widget.cpp
 )
 
 

@@ -1,6 +1,7 @@
 #include "wavy-main-window.h"
 #include "../lib/vcd-parser/vcd-char-stream.h"
 #include "../lib/vcd-parser/vcd-token-stream.h"
+#include "scope-tree-widget.h"
 #include "ui_wavy-main-window.h"
 #include "vcd-plotter.h"
 #include <QFileDialog>
@@ -95,7 +96,7 @@ void WavyMainWindow::loadVCDData(std::string path) {
                                 QString::fromStdString(path).split("/").last());
 
     // creating scope tree
-    QTreeWidget *treeWidget = this->createTreeWidget(VCDData->scopes);
+    QTreeWidget *treeWidget = new ScopeTreeWidget(VCDData->scopes, this->ui->sidebar_scope_scroll_container);
 
     this->vcdDataFiles.insert(qstring_path,
                               {VCDData, tab, treeWidget,
@@ -114,84 +115,6 @@ void WavyMainWindow::loadVCDData(std::string path) {
     this->_VCDDataActive = qstring_path;
   }
   this->setVCDDataActive(qstring_path);
-}
-
-QTreeWidget *WavyMainWindow::createTreeWidget(std::vector<ScopeData> data) {
-
-  QTreeWidget *scopeTree =
-      new QTreeWidget(this->ui->sidebar_scope_scroll_container);
-
-
-  struct TreeNodeInfo {
-    QTreeWidgetItem *self;
-  };
-
-  QMap<QString, TreeNodeInfo> treeMap;
-
-  int i = 0;
-  int created = 0;
-  while (i < data.size() && created < data.size()) {
-    auto &datum = data[i];
-    if (datum.ID == "") {
-      i++;
-    } else {
-
-      // root
-      if (datum.parentScopeID == "") {
-
-        QTreeWidgetItem *item = new QTreeWidgetItem(scopeTree);
-        item->setText(0, QString::fromStdString(datum.name));
-        item->setFlags(item->flags()&(~Qt::ItemIsSelectable));
-
-        // todo switch by datum.type
-        // item->setIcon(int column, const QIcon &aicon)
-
-        treeMap.insert(QString::fromStdString(datum.ID), {item});
-        created++;
-        datum.ID = "";
-      } else {
-        QString keyParentID = QString::fromStdString(datum.parentScopeID);
-        if (treeMap.contains(keyParentID)) {
-
-          auto parent = treeMap.value(keyParentID);
-
-          QTreeWidgetItem *item = new QTreeWidgetItem(parent.self);
-          item->setFlags(item->flags()&(~Qt::ItemIsSelectable));
-          item->setText(0, QString::fromStdString(datum.name));
-
-          treeMap.insert(QString::fromStdString(datum.ID), {item});
-          datum.ID = "";
-          created++;
-
-          for (auto &var : datum.vars) {
-            QTreeWidgetItem *varItem = new QTreeWidgetItem(item);
-            varItem->setText(0, QString::fromStdString(var.trueName));
-            // todo
-            // set a proper icon depending on a var.type
-            if (var.size > 1) {
-              for (int i = 0; i < var.size; i++) {
-                QTreeWidgetItem *varItemVector = new QTreeWidgetItem(varItem);
-                varItemVector->setText(
-                    0, QString::fromStdString(var.trueName + " [" +
-                                              std::to_string(i) + "]"));
-              }
-            }
-          }
-
-        } else {
-          i++;
-          continue;
-        }
-      };
-    }
-    if (i >= data.size())
-      i = 0;
-  }
-
-  scopeTree->setHeaderHidden(true);
-  scopeTree->setSelectionMode(QAbstractItemView::ExtendedSelection);
-  scopeTree->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-  return scopeTree;
 }
 
 void WavyMainWindow::setVCDDataActive(QString path) {
