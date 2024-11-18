@@ -2,10 +2,13 @@
 #include "../lib/vcd-parser/vcd-char-stream.h"
 #include "../lib/vcd-parser/vcd-token-stream.h"
 #include "ui_wavy-main-window.h"
+#include "vcd-plotter.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPair>
 #include <exception>
+#include <qabstractitemmodel.h>
+#include <qabstractscrollarea.h>
 #include <qaction.h>
 #include <qdebug.h>
 #include <qdialog.h>
@@ -13,21 +16,20 @@
 #include <qobject.h>
 #include <qstyle.h>
 #include <qtabwidget.h>
+#include <qtoolbutton.h>
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <string>
 
 WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->ui->setupUi(this);
-  this->selected_dumps_list = ui->selected_dumps_list;
   this->waveform_tabs = ui->waveform_tabs;
   this->sidebar = ui->sidebar;
   this->sidebar_objects_button_close = ui->sidebar_objects_button_close;
   this->sidebar_scope_button_close = ui->sidebar_scope_button_close;
+  this->sidebar_scope_button_ok = ui->sidebar_scope_button_ok;
   this->objects_list = ui->objects_list;
-  this->dumps_list = ui->dumps_list;
   this->sidebar_scope_scroll_container = ui->sidebar_scope_scroll_container;
-  this->waveform_scroll = ui->waveform_scroll;
   this->action_open = ui->action_open;
   this->action_save = ui->action_save;
 
@@ -41,15 +43,33 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
     this->loadVCDData(filename.toStdString());
   });
 
-  QObject::connect(ui->waveform_tabs, &QTabWidget::currentChanged, this, [this](int index) {
-    QWidget* tab = this->waveform_tabs->widget(index);
+  QObject::connect(
+      ui->waveform_tabs, &QTabWidget::currentChanged, this, [this](int index) {
+        QWidget *tab = this->waveform_tabs->widget(index);
 
-    for (auto [key, value] : this->vcdDataFiles.asKeyValueRange()) {
-      if (value.tab == tab) {
-        this->setVCDDataActive(key);
-      }
-    }
-  });
+        for (auto [key, value] : this->vcdDataFiles.asKeyValueRange()) {
+          if (value.tab == tab) {
+            this->setVCDDataActive(key);
+          }
+        }
+      });
+
+  QObject::connect(this->sidebar_scope_button_ok, &QToolButton::clicked, this,
+                   [this]() {
+
+                       QList<QTreeWidgetItem *> selectedElements =
+                           this->vcdDataFiles.value(this->_VCDDataActive)
+                               .scopeTree->selectedItems();
+
+                        QList<QTreeWidgetItem*> items;
+                        for (auto &it: selectedElements) {
+                          items.append(it->clone());
+                        }
+
+                        this->vcdDataFiles.value(this->_VCDDataActive)
+                            .selectedTree->addTopLevelItems(items);
+ 
+                   });
 }
 
 void WavyMainWindow::loadVCDData(std::string path) {
@@ -70,16 +90,27 @@ void WavyMainWindow::loadVCDData(std::string path) {
 
   if (!this->vcdDataFiles.contains(qstring_path)) {
     // creating tab
-    QWidget *tab = new QWidget();
-    tab->setObjectName(path+"_tab");
+    QWidget *tab = new VCDPlotter(VCDData);
     this->waveform_tabs->addTab(tab,
                                 QString::fromStdString(path).split("/").last());
 
     // creating scope tree
-    QTreeWidget* treeWidget = this->createTreeWidget(VCDData->scopes);
-    treeWidget->setObjectName(path+"_tree");
+    QTreeWidget *treeWidget = this->createTreeWidget(VCDData->scopes);
 
-    this->vcdDataFiles.insert(qstring_path, {VCDData, tab, treeWidget});
+    this->vcdDataFiles.insert(qstring_path,
+                              {VCDData, tab, treeWidget,
+                               static_cast<VCDPlotter *>(tab)->selected_dumps});
+
+    QObject::connect(treeWidget,
+                     &QTreeWidget::itemSelectionChanged, this, [this]() {
+                       QList<QTreeWidgetItem *> selectedElements =
+                           this->vcdDataFiles.value(this->_VCDDataActive)
+                               .scopeTree->selectedItems();
+                       qDebug() << selectedElements;
+                       this->sidebar_scope_button_ok->setDisabled(
+                           selectedElements.size() == 0);
+                     });
+
     this->_VCDDataActive = qstring_path;
   }
   this->setVCDDataActive(qstring_path);
@@ -131,16 +162,16 @@ QTreeWidget *WavyMainWindow::createTreeWidget(std::vector<ScopeData> data) {
           for (auto &var : datum.vars) {
             QTreeWidgetItem *varItem = new QTreeWidgetItem(item);
             varItem->setText(0, QString::fromStdString(var.trueName));
-            // todo 
+            // todo
             // set a proper icon depending on a var.type
             if (var.size > 1) {
               for (int i = 0; i < var.size; i++) {
                 QTreeWidgetItem *varItemVector = new QTreeWidgetItem(varItem);
-                varItemVector->setText(0, QString::fromStdString(var.trueName + " [" + std::to_string(i) + "]"));
-
+                varItemVector->setText(
+                    0, QString::fromStdString(var.trueName + " [" +
+                                              std::to_string(i) + "]"));
               }
             }
-
           }
 
         } else {
@@ -149,9 +180,13 @@ QTreeWidget *WavyMainWindow::createTreeWidget(std::vector<ScopeData> data) {
         }
       };
     }
-    if (i >= data.size()) i = 0;
+    if (i >= data.size())
+      i = 0;
   }
 
+  scopeTree->setHeaderHidden(true);
+  scopeTree->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  scopeTree->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
   return scopeTree;
 }
 
@@ -162,17 +197,17 @@ void WavyMainWindow::setVCDDataActive(QString path) {
     return;
   }
 
-
   // setting tab
   this->waveform_tabs->setCurrentWidget(this->vcdDataFiles.value(path).tab);
 
   // filling scope tab
   this->vcdDataFiles.value(this->_VCDDataActive).scopeTree->setParent(NULL);
-  this->vcdDataFiles.value(path).scopeTree->setParent(this->sidebar_scope_scroll_container);
+  this->vcdDataFiles.value(path).scopeTree->setParent(
+      this->sidebar_scope_scroll_container);
   this->vcdDataFiles.value(path).scopeTree->setGeometry({0, 0, 1000, 1000});
-  this->vcdDataFiles.value(path).scopeTree->setHeaderHidden(true);
   this->vcdDataFiles.value(path).scopeTree->show();
-  // todo 
+
+  // todo
   // make scrollbar appear when length is too much
   this->vcdDataFiles.value(path).scopeTree->resizeColumnToContents(0);
 

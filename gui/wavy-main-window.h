@@ -20,6 +20,7 @@ struct GUIVCDInfo {
   VCDData* vcddata;
   QWidget* tab;
   QTreeWidget* scopeTree;
+  QTreeWidget* selectedTree;
 };
 
 
@@ -35,13 +36,12 @@ class WavyMainWindow : public QMainWindow {
 public:
   WavyMainWindow();
   
-  QVBoxLayout *selected_dumps_list;
   QTabWidget *waveform_tabs;
   QTabWidget *sidebar;
   QToolButton *sidebar_objects_button_close;
   QToolButton *sidebar_scope_button_close;
+  QToolButton *sidebar_scope_button_ok;
   QListWidget *objects_list;
-  QListWidget *dumps_list;
   QWidget *sidebar_scope_scroll_container;
   QScrollArea *waveform_scroll;
   QAction *action_open;
