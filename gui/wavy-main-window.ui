@@ -43,7 +43,7 @@
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="sidebar_scope">
         <attribute name="title">
@@ -76,7 +76,8 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset theme="dialog-ok"/>
+              <iconset theme="dialog-ok">
+               <normaloff>.</normaloff>.</iconset>
              </property>
              <property name="checkable">
               <bool>false</bool>
@@ -105,7 +106,8 @@
               <string>...</string>
              </property>
              <property name="icon">
-              <iconset theme="window-close"/>
+              <iconset theme="window-close">
+               <normaloff>.</normaloff>.</iconset>
              </property>
             </widget>
            </item>
@@ -303,6 +305,9 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
                  <item>
                   <property name="text">
                    <string>New Item</string>
+                  </property>
+                  <property name="flags">
+                   <set>ItemIsDragEnabled|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
                   </property>
                  </item>
                  <item>

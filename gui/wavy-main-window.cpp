@@ -13,6 +13,7 @@
 #include <qdebug.h>
 #include <qdialog.h>
 #include <qlogging.h>
+#include <qnamespace.h>
 #include <qobject.h>
 #include <qstyle.h>
 #include <qtabwidget.h>
@@ -68,7 +69,6 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
 
                         this->vcdDataFiles.value(this->_VCDDataActive)
                             .selectedTree->addTopLevelItems(items);
- 
                    });
 }
 
@@ -121,6 +121,7 @@ QTreeWidget *WavyMainWindow::createTreeWidget(std::vector<ScopeData> data) {
   QTreeWidget *scopeTree =
       new QTreeWidget(this->ui->sidebar_scope_scroll_container);
 
+
   struct TreeNodeInfo {
     QTreeWidgetItem *self;
   };
@@ -140,6 +141,8 @@ QTreeWidget *WavyMainWindow::createTreeWidget(std::vector<ScopeData> data) {
 
         QTreeWidgetItem *item = new QTreeWidgetItem(scopeTree);
         item->setText(0, QString::fromStdString(datum.name));
+        item->setFlags(item->flags()&(~Qt::ItemIsSelectable));
+
         // todo switch by datum.type
         // item->setIcon(int column, const QIcon &aicon)
 
@@ -153,6 +156,7 @@ QTreeWidget *WavyMainWindow::createTreeWidget(std::vector<ScopeData> data) {
           auto parent = treeMap.value(keyParentID);
 
           QTreeWidgetItem *item = new QTreeWidgetItem(parent.self);
+          item->setFlags(item->flags()&(~Qt::ItemIsSelectable));
           item->setText(0, QString::fromStdString(datum.name));
 
           treeMap.insert(QString::fromStdString(datum.ID), {item});
