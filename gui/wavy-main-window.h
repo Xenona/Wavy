@@ -15,11 +15,13 @@
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <QTreeWidget>
+#include "scope-tree-widget.h"
+#include "vcd-plotter.h"
 
 struct GUIVCDInfo {
   VCDData* vcddata;
-  QWidget* tab;
-  QTreeWidget* scopeTree;
+  VCDPlotter* tab;
+  ScopeTreeWidget* scopeTree;
   QTreeWidget* selectedTree;
 };
 

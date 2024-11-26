@@ -1,9 +1,8 @@
 #include "scope-tree-widget.h"
 #include "wavy-main-window.h"
+#include <qobject.h>
 
 ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
-
-  QTreeWidget *scopeTree = new QTreeWidget(parent);
 
   struct TreeNodeInfo {
     QTreeWidgetItem *self;
@@ -22,7 +21,7 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
       // root
       if (datum.parentScopeID == "") {
 
-        QTreeWidgetItem *item = new QTreeWidgetItem(scopeTree);
+        QTreeWidgetItem *item = new QTreeWidgetItem(this);
         item->setText(0, QString::fromStdString(datum.name));
         item->setFlags(item->flags() & (~Qt::ItemIsSelectable));
 
@@ -48,6 +47,9 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
 
           for (auto &var : datum.vars) {
             QTreeWidgetItem *varItem = new QTreeWidgetItem(item);
+            
+            this->varData.insert(varItem, var);
+
             varItem->setText(0, QString::fromStdString(var.trueName));
             // todo
             // set a proper icon depending on a var.type
@@ -71,7 +73,7 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
       i = 0;
   }
 
-  scopeTree->setHeaderHidden(true);
-  scopeTree->setSelectionMode(QAbstractItemView::ExtendedSelection);
-  scopeTree->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+  this->setHeaderHidden(true);
+  this->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  this->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 }

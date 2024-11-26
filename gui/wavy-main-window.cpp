@@ -13,6 +13,7 @@
 #include <qaction.h>
 #include <qdebug.h>
 #include <qdialog.h>
+#include <qfont.h>
 #include <qlogging.h>
 #include <qnamespace.h>
 #include <qobject.h>
@@ -56,21 +57,27 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
         }
       });
 
-  QObject::connect(this->sidebar_scope_button_ok, &QToolButton::clicked, this,
-                   [this]() {
+  QObject::connect(
+      this->sidebar_scope_button_ok, &QToolButton::clicked, this, [this]() {
+        QList<QTreeWidgetItem *> selectedElements =
+            this->vcdDataFiles.value(this->_VCDDataActive)
+                .scopeTree->selectedItems();
 
-                       QList<QTreeWidgetItem *> selectedElements =
-                           this->vcdDataFiles.value(this->_VCDDataActive)
-                               .scopeTree->selectedItems();
+        QList<QTreeWidgetItem *> items;
+        QList<VarData> varData;
+        for (auto it : selectedElements) {
+          auto newItem = it->clone();
+          auto f = QFont(newItem->font(0));
+          f.setPointSize(16);
+          newItem->setFont(0, f);
+          items.append(newItem);
+          varData.append(this->vcdDataFiles.value(this->_VCDDataActive)
+                             .scopeTree->varData.value(it));
+        }
 
-                        QList<QTreeWidgetItem*> items;
-                        for (auto &it: selectedElements) {
-                          items.append(it->clone());
-                        }
-
-                        this->vcdDataFiles.value(this->_VCDDataActive)
-                            .selectedTree->addTopLevelItems(items);
-                   });
+        this->vcdDataFiles.value(this->_VCDDataActive)
+            .tab->addSelectedDumps(items, varData);
+      });
 }
 
 void WavyMainWindow::loadVCDData(std::string path) {
@@ -91,23 +98,22 @@ void WavyMainWindow::loadVCDData(std::string path) {
 
   if (!this->vcdDataFiles.contains(qstring_path)) {
     // creating tab
-    QWidget *tab = new VCDPlotter(VCDData);
+    VCDPlotter *tab = new VCDPlotter(VCDData, this);
     this->waveform_tabs->addTab(tab,
                                 QString::fromStdString(path).split("/").last());
 
     // creating scope tree
-    QTreeWidget *treeWidget = new ScopeTreeWidget(VCDData->scopes, this->ui->sidebar_scope_scroll_container);
+    ScopeTreeWidget *treeWidget = new ScopeTreeWidget(
+        VCDData->scopes, this->ui->sidebar_scope_scroll_container);
 
     this->vcdDataFiles.insert(qstring_path,
-                              {VCDData, tab, treeWidget,
-                               static_cast<VCDPlotter *>(tab)->selected_dumps});
+                              {VCDData, tab, treeWidget, tab->selected_dumps});
 
-    QObject::connect(treeWidget,
-                     &QTreeWidget::itemSelectionChanged, this, [this]() {
+    QObject::connect(treeWidget, &QTreeWidget::itemSelectionChanged, this,
+                     [this]() {
                        QList<QTreeWidgetItem *> selectedElements =
                            this->vcdDataFiles.value(this->_VCDDataActive)
                                .scopeTree->selectedItems();
-                       qDebug() << selectedElements;
                        this->sidebar_scope_button_ok->setDisabled(
                            selectedElements.size() == 0);
                      });
