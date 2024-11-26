@@ -14,6 +14,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
   VCDData *vcd = new VCDData();
   this->tokenStream = tokenStream;
   std::stack<ScopeData> scopes;
+  int lastKey = 0;
 
   while (this->tokenStream->peek().type != TokenType::NIL) {
     Token token;
@@ -67,7 +68,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Data): {
       switch (token.type) {
       case (TokenType::SimulationTime): {
-        vcd->timepoints.push_back({.time = stoi(token.value), .data = {}});
+        lastKey = stoi(token.value);
+        vcd->timepoints.insert({lastKey, DumpData{}});
         break;
       }
 
@@ -78,40 +80,40 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       };
 
       case (TokenType::ScalarValueChange): {
-        vcd->timepoints.back().data.scals.push_back(
+        vcd->timepoints[lastKey].scals.push_back(
             {.value = token.value[0], .identifier = token.value.substr(1)});
         break;
       }
 
       case (TokenType::VectorValueChange): {
-        vcd->timepoints.back().data.vecs.push_back(
+        vcd->timepoints[lastKey].vecs.push_back(
             {.type = token.value[0], .valueVec = token.value.substr(1)});
         break;
       }
 
       case (TokenType::Identifier): {
-        vcd->timepoints.back().data.vecs.back().identifier = token.value;
+        vcd->timepoints[lastKey].vecs.back().identifier = token.value;
         break;
       }
 
       case (TokenType::DumpallKeyword): {
-        vcd->timepoints.back().data.type = DumpType::All;
+        vcd->timepoints[lastKey].type = DumpType::All;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumponKeyword): {
-        vcd->timepoints.back().data.type = DumpType::On;
+        vcd->timepoints[lastKey].type = DumpType::On;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumpoffKeyword): {
-        vcd->timepoints.back().data.type = DumpType::Off;
+        vcd->timepoints[lastKey].type = DumpType::Off;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumpvarsKeyword): {
 
-        vcd->timepoints.back().data.type = DumpType::Vars;
+        vcd->timepoints[lastKey].type = DumpType::Vars;
         this->state = ParserState::Dumps;
         break;
       }
@@ -299,13 +301,13 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Dumps): {
 
       if (token.type == TokenType::ScalarValueChange) {
-        vcd->timepoints.back().data.scals.push_back(
+        vcd->timepoints[lastKey].scals.push_back(
             {.value = token.value[0], .identifier = token.value.substr(1)});
       } else if (token.type == TokenType::VectorValueChange) {
-        vcd->timepoints.back().data.vecs.push_back(
+        vcd->timepoints[lastKey].vecs.push_back(
             {.type = token.value[0], .valueVec = token.value.substr(1)});
       } else if (token.type == TokenType::Identifier) {
-        vcd->timepoints.back().data.vecs.back().identifier = token.value;
+        vcd->timepoints[lastKey].vecs.back().identifier = token.value;
       } else if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Data;
       }

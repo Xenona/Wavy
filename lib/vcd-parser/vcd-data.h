@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 struct DateData {
   std::string date;
@@ -74,12 +75,11 @@ struct DumpData {
   std::vector<VectorValueChangeData> vecs;
   std::vector<ScalarValueChangeData> scals;
 };
-
-struct TimestampData {
-  int time;
-  DumpData data;
-};
-
+// todo
+// make the lexer check whether timepoint integers grow only
+// otherwise a no-no and throw and error
+// todo 
+// deal with errors... 
 class VCDData {
 
 public:
@@ -89,7 +89,7 @@ public:
   TimescaleData timescale;
   std::vector<CommentData> comments;
   std::vector<ScopeData> scopes;
-  std::vector<TimestampData> timepoints;
+  std::map<int, DumpData> timepoints;
   std::vector<std::string> errors;
   std::vector<std::string> warns;
 };
