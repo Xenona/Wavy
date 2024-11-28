@@ -17,6 +17,7 @@ public:
   QList<QTreeWidgetItem *> &list;
   void resizeEvent(QResizeEvent *event) override;
   void paintEvent(QPaintEvent *event) override;
+  
 
   int scrollHeight;
   QRect itemRect;

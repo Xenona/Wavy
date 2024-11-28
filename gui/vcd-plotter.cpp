@@ -22,6 +22,7 @@
 #include <qwidget.h>
 #include <sched.h>
 #include "waves.h"
+#include <QWheelEvent>
 
 // todo
 // add enter to add selected dumps
@@ -171,6 +172,14 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   // if shift, scroll left/right, if ctrl, zoom in out
   // where mouse points, if just like that, zoom in out
   // where marker is
+  qDebug() << event;
+  int one = event->inverted()?1:-1;
+
+  if (event->angleDelta().y() > 0) {
+    this->vertScroll->setSliderPosition(this->vertScroll->sliderPosition()+one);
+  } else {
+    this->vertScroll->setSliderPosition(this->vertScroll->sliderPosition()-one);
+  }
 }
 
 void VCDPlotter::plotUpdate() {
