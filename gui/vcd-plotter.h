@@ -7,7 +7,7 @@
 #include "vcd-graphics-view.h"
 #include <QTreeWidget>
 #include <qtreewidget.h>
-#include "waves.h"
+#include "vcd-graphics-view.h"
 
 class VCDPlotter: public QWidget {
 
@@ -25,6 +25,12 @@ public:
   void plotUpdate();
   void drawWave();
 
+  int marker = 0;
+  int leftFOVborder = 0; 
+  int rightFOVborder = 0;
+
+  int currentHeight = 0;
+
 
 private:
 
@@ -35,11 +41,5 @@ private:
   QScrollBar* horizScroll;
   QScrollBar* vertScroll;
 
-
-  int marker;
-  int leftFOVborder; 
-  int rightFOVborder;
-
-  int currentHeight;
 
 };

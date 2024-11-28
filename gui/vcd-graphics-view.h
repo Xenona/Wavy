@@ -5,12 +5,13 @@
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <QGraphicsScene>
-#include "waves.h"
 
+class Waves;
+class VCDPlotter;
 class VCDGraphicsView : public QGraphicsView {
 
 public:
-  VCDGraphicsView(QList<VarData>& vars, QList<QTreeWidgetItem *>& list, VCDData *data,
+  VCDGraphicsView(VCDPlotter*top, QList<VarData>& vars, QList<QTreeWidgetItem *>& list, VCDData *data,
                   QWidget *parent = nullptr);
   ~VCDGraphicsView();
   QList<QTreeWidgetItem *> &list;
@@ -24,4 +25,5 @@ public:
   VCDData *data;
   Waves * waves;
   QList<VarData>& vars;
+  VCDPlotter*top;
 };

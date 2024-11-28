@@ -47,11 +47,11 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent) : QWidget(parent) {
   this->selected_dumps->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   this->selected_dumps->setSelectionMode(QAbstractItemView::MultiSelection);
   // this->selected_dumps_list->setMaximumWidth(600);
-  // this->selected_dumps_list->setMinimumWidth(50);
+  this->selected_dumps->setMinimumWidth(100);
   this->selected_dumps->setGeometry({0, 0, 1000, 1000});
   this->selected_dumps->show();
 
-  horizontalLayout->addWidget(selected_dumps);
+  // horizontalLayout->addWidget(selected_dumps);
 
   // this->vertScroll = new QScrollBar(verticalLayoutWidget_4);
   // this->vertScroll->setOrientation(Qt::Vertical);
@@ -63,7 +63,7 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent) : QWidget(parent) {
   QVBoxLayout *verticalLayout_2 = new QVBoxLayout(verticalLayoutWidget);
   verticalLayout_2->setSpacing(0);
   verticalLayout_2->setContentsMargins(0, 0, 0, 0);
-  this->view = new VCDGraphicsView(this->varsList, this->dumpsList, this->data,
+  this->view = new VCDGraphicsView(this, this->varsList, this->dumpsList, this->data,
                                    verticalLayoutWidget);
 
   verticalLayout_2->addWidget(this->view);
@@ -76,6 +76,7 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent) : QWidget(parent) {
   splitter->addWidget(verticalLayoutWidget);
 
   verticalLayout_12->addWidget(splitter);
+  splitter->setSizes({10});
 
   QObject::connect(this->vertScroll, &QScrollBar::actionTriggered, this,
                    [this](int value) {
@@ -90,7 +91,7 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent) : QWidget(parent) {
   } else {
     // todo replace int with long long maybe
     this->leftFOVborder = 0;
-    this->rightFOVborder = this->data->timepoints.size() - 1;
+    this->rightFOVborder = this->data->timepoints.back().time;
     this->marker = this->leftFOVborder;
     this->horizScroll->setMinimum(this->leftFOVborder);
     this->horizScroll->setMaximum(this->rightFOVborder);
@@ -188,12 +189,13 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
 
 void VCDPlotter::plotUpdate() {
   // todo
-  // this->view->scrollHeight = this->currentHeight;
-  // if (this->dumpsList.length())
-  //   this->view->itemRect =
-  //       this->selected_dumps->visualItemRect(this->dumpsList[0]);
+
+
+  this->view->scrollHeight = this->currentHeight;
+  if (this->dumpsList.length())
+    this->view->itemRect =
+        this->selected_dumps->visualItemRect(this->dumpsList[0]);
   // this->view->update();
-  this->view->waves->test++;
   // this->view->repaint();
   this->view->waves->update();
 

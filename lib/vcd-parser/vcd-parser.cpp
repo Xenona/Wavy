@@ -4,6 +4,7 @@
 #include <QtDebug>
 #include <QtLogging>
 #include <cctype>
+#include <cstdlib>
 #include <exception>
 #include <qdebug.h>
 #include <stack>
@@ -14,7 +15,6 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
   VCDData *vcd = new VCDData();
   this->tokenStream = tokenStream;
   std::stack<ScopeData> scopes;
-  int lastKey = 0;
 
   while (this->tokenStream->peek().type != TokenType::NIL) {
     Token token;
@@ -68,8 +68,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Data): {
       switch (token.type) {
       case (TokenType::SimulationTime): {
-        lastKey = stoi(token.value);
-        vcd->timepoints.insert({lastKey, DumpData{}});
+        vcd->timepoints.push_back({.time = stoi(token.value), .data = {}});
         break;
       }
 
@@ -80,40 +79,52 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       };
 
       case (TokenType::ScalarValueChange): {
-        vcd->timepoints[lastKey].scals.push_back(
-            {.value = token.value[0], .identifier = token.value.substr(1)});
+         vcd->timepoints.back().data.scals.push_back(
+            {.value = token.value[0] - '0',
+             .identifier = token.value.substr(1)});
         break;
       }
 
       case (TokenType::VectorValueChange): {
-        vcd->timepoints[lastKey].vecs.push_back(
-            {.type = token.value[0], .valueVec = token.value.substr(1)});
+        float f = 0;
+        long long ll = 0;
+        if (token.value[0] == 'r' || token.value[0] == 'R') {
+          f = stof(token.value.substr(1));
+        }
+        if (token.value[0] == 'b' || token.value[0] == 'B') {
+          ll = strtoll(token.value.substr(1).c_str(), nullptr, 2);
+        }
+          vcd->timepoints.back().data.vecs.push_back(
+            {.type = token.value[0],
+             .valueVec = token.value.substr(1),
+             .valueVecDec = ll,
+             .valueVecDecFloat = f});
         break;
       }
 
       case (TokenType::Identifier): {
-        vcd->timepoints[lastKey].vecs.back().identifier = token.value;
+         vcd->timepoints.back().data.vecs.back().identifier = token.value;
         break;
       }
 
       case (TokenType::DumpallKeyword): {
-        vcd->timepoints[lastKey].type = DumpType::All;
+        vcd->timepoints.back().data.type = DumpType::All;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumponKeyword): {
-        vcd->timepoints[lastKey].type = DumpType::On;
+        vcd->timepoints.back().data.type = DumpType::On;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumpoffKeyword): {
-        vcd->timepoints[lastKey].type = DumpType::Off;
+        vcd->timepoints.back().data.type = DumpType::Off;
         this->state = ParserState::Dumps;
         break;
       }
       case (TokenType::DumpvarsKeyword): {
 
-        vcd->timepoints[lastKey].type = DumpType::Vars;
+         vcd->timepoints.back().data.type = DumpType::Vars;
         this->state = ParserState::Dumps;
         break;
       }
@@ -240,7 +251,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     }
 
     case (ParserState::ScopeVar): {
-      if (this->tokenStream->isInteger(token.value) && !scopes.top().vars.back().size) {
+      if (this->tokenStream->isInteger(token.value) &&
+          !scopes.top().vars.back().size) {
         scopes.top().vars.back().size = std::stoi(token.value);
       } else if (token.type == TokenType::Identifier) {
         if (scopes.top().vars.back().type == VarTypes::NIL) {
@@ -289,7 +301,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
           scopes.top().vars.back().trueName = token.value;
         } else {
           this->warn(
-              "Var declaration has excess tokens which are to be ignored. " + token.value,
+              "Var declaration has excess tokens which are to be ignored. " +
+                  token.value,
               vcd);
         }
       } else if (token.type == TokenType::EndKeyword) {
@@ -301,13 +314,25 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Dumps): {
 
       if (token.type == TokenType::ScalarValueChange) {
-        vcd->timepoints[lastKey].scals.push_back(
-            {.value = token.value[0], .identifier = token.value.substr(1)});
+        vcd->timepoints.back().data.scals.push_back(
+            {.value = token.value[0] - '0',
+             .identifier = token.value.substr(1)});
       } else if (token.type == TokenType::VectorValueChange) {
-        vcd->timepoints[lastKey].vecs.push_back(
-            {.type = token.value[0], .valueVec = token.value.substr(1)});
+       float f = 0;
+        long long ll = 0;
+        if (token.value[0] == 'r' || token.value[0] == 'R') {
+          f = stof(token.value.substr(1));
+        }
+        if (token.value[0] == 'b' || token.value[0] == 'B') {
+          ll = strtoll(token.value.substr(1).c_str(), nullptr, 2);
+        }
+        vcd->timepoints.back().data.vecs.push_back(
+            {.type = token.value[0],
+             .valueVec = token.value.substr(1),
+             .valueVecDec = ll,
+             .valueVecDecFloat = f});
       } else if (token.type == TokenType::Identifier) {
-        vcd->timepoints[lastKey].vecs.back().identifier = token.value;
+        vcd->timepoints.back().data.vecs.back().identifier = token.value;
       } else if (token.type == TokenType::EndKeyword) {
         this->state = ParserState::Data;
       }

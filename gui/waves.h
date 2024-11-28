@@ -1,14 +1,22 @@
 #pragma once
+#include "vcd-graphics-view.h"
 #include <QGraphicsObject>
 #include <QWidget>
-
-class Waves: public QGraphicsObject {
-
-  public: 
-    QRectF boundingRect() const override;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override;
+#include "vcd-plotter.h"
 
 
-    int test;
+class Waves : public QGraphicsObject {
 
-} ;
+public:
+  Waves(VCDGraphicsView *top);
+
+  QRectF boundingRect() const override;
+  void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+             QWidget *widget = nullptr) override;
+
+  int test;
+  VCDGraphicsView *top;
+  int isScalar(DumpData data, std::string id);
+  int isVector(DumpData data, std::string id);
+
+};
