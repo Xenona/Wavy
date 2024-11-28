@@ -18,10 +18,11 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
       i++;
     } else {
 
+      QTreeWidgetItem *item;
       // root
       if (datum.parentScopeID == "") {
 
-        QTreeWidgetItem *item = new QTreeWidgetItem(this);
+        item = new QTreeWidgetItem(this);
         item->setText(0, QString::fromStdString(datum.name));
         item->setFlags(item->flags() & (~Qt::ItemIsSelectable));
 
@@ -37,7 +38,7 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
 
           auto parent = treeMap.value(keyParentID);
 
-          QTreeWidgetItem *item = new QTreeWidgetItem(parent.self);
+          item = new QTreeWidgetItem(parent.self);
           item->setFlags(item->flags() & (~Qt::ItemIsSelectable));
           item->setText(0, QString::fromStdString(datum.name));
 
@@ -45,29 +46,29 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
           datum.ID = "";
           created++;
 
-          for (auto &var : datum.vars) {
-            QTreeWidgetItem *varItem = new QTreeWidgetItem(item);
-            
-            this->varData.insert(varItem, var);
-
-            varItem->setText(0, QString::fromStdString(var.trueName));
-            // todo
-            // set a proper icon depending on a var.type
-            if (var.size > 1) {
-              for (int i = 0; i < var.size; i++) {
-                QTreeWidgetItem *varItemVector = new QTreeWidgetItem(varItem);
-                varItemVector->setText(
-                    0, QString::fromStdString(var.trueName + " [" +
-                                              std::to_string(i) + "]"));
-              }
-            }
-          }
-
         } else {
           i++;
           continue;
         }
       };
+
+      for (auto &var : datum.vars) {
+        QTreeWidgetItem *varItem = new QTreeWidgetItem(item);
+
+        this->varData.insert(varItem, var);
+
+        varItem->setText(0, QString::fromStdString(var.trueName));
+        // todo
+        // set a proper icon depending on a var.type
+        if (var.size > 1) {
+          for (int i = 0; i < var.size; i++) {
+            QTreeWidgetItem *varItemVector = new QTreeWidgetItem(varItem);
+            varItemVector->setText(
+                0, QString::fromStdString(var.trueName + " [" +
+                                          std::to_string(i) + "]"));
+          }
+        }
+      }
     }
     if (i >= data.size())
       i = 0;
