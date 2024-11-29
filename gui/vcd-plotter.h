@@ -34,7 +34,7 @@ public:
 
 private:
 
-  int MAX_ZOOM_DELTA = 10;
+  int MAX_ZOOM_DELTA = 30;
 
   VCDData* data;
   VCDGraphicsView* view;
