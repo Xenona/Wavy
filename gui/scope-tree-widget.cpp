@@ -1,6 +1,7 @@
 #include "scope-tree-widget.h"
 #include "wavy-main-window.h"
 #include <qobject.h>
+#include <string>
 
 ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
 
@@ -57,17 +58,17 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
 
         this->varData.insert(varItem, var);
 
-        varItem->setText(0, QString::fromStdString(var.trueName));
+        varItem->setText(0, QString::fromStdString(var.trueName + " [" + std::to_string(var.size) + ":0]"));
         // todo
         // set a proper icon depending on a var.type
-        if (var.size > 1) {
-          for (int i = 0; i < var.size; i++) {
-            QTreeWidgetItem *varItemVector = new QTreeWidgetItem(varItem);
-            varItemVector->setText(
-                0, QString::fromStdString(var.trueName + " [" +
-                                          std::to_string(i) + "]"));
-          }
-        }
+        // if (var.size > 1) {
+        //   for (int i = 0; i < var.size; i++) {
+        //     QTreeWidgetItem *varItemVector = new QTreeWidgetItem(varItem);
+        //     varItemVector->setText(
+        //         0, QString::fromStdString(var.trueName + " [" +
+        //                                   std::to_string(i) + "]"));
+        //   }
+        // }
       }
     }
     if (i >= data.size())
