@@ -79,3 +79,11 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
   this->setSelectionMode(QAbstractItemView::ExtendedSelection);
   this->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 }
+
+ScopeTreeWidget::~ScopeTreeWidget() {
+  while (!this->varData.isEmpty()) {
+    auto key = this->varData.cbegin().key();
+    this->varData.remove(key);
+    delete key;
+  }
+}

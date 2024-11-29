@@ -22,7 +22,7 @@ struct GUIVCDInfo {
   VCDData* vcddata;
   VCDPlotter* tab;
   ScopeTreeWidget* scopeTree;
-  QTreeWidget* selectedTree;
+  // QTreeWidget* selectedTree;
 };
 
 
@@ -37,6 +37,7 @@ class WavyMainWindow : public QMainWindow {
 
 public:
   WavyMainWindow();
+  ~WavyMainWindow();
   
   QTabWidget *waveform_tabs;
   QTabWidget *sidebar;
@@ -52,8 +53,10 @@ public:
   void loadVCDData(std::string path);
   void setVCDDataActive(QString path);
   QString VCDDataActive();
+  void removeActiveVCD();
 
   QTreeWidget* createTreeWidget(std::vector<ScopeData> data);
+  void closeTab(int idx);
 
 private:
   QMap<QString, GUIVCDInfo> vcdDataFiles;

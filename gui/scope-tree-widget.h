@@ -9,9 +9,8 @@ class ScopeTreeWidget: public QTreeWidget {
 
 public:
   ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent = nullptr);
-  ~ScopeTreeWidget() = default;
+  ~ScopeTreeWidget();
 
-  QTreeWidgetItem *currentItem;
   QMap<QTreeWidgetItem*, VarData> varData;
 
 };

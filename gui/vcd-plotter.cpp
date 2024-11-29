@@ -5,6 +5,7 @@
 #include <QHeaderView>
 #include <QPainterPath>
 #include <QScrollBar>
+#include <QSizePolicy>
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QWheelEvent>
@@ -21,6 +22,8 @@
 #include <qpainterpath.h>
 #include <qscrollbar.h>
 #include <qsize.h>
+#include <qsizepolicy.h>
+#include <qtabwidget.h>
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <sched.h>
@@ -28,8 +31,8 @@
 // todo
 // add enter to add selected dumps
 
-VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
-    : QWidget(parent)
+VCDPlotter::VCDPlotter(QString path, VCDData *data, QWidget *parent)
+    : QWidget(parent), path(path)
 
 {
   this->data = data;
@@ -47,6 +50,7 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
   // this->selected_dumps_list->setMaximumWidth(600);
   // this->selected_dumps_list->setMinimumWidth(50);
   this->selected_dumps->setGeometry({0, 0, 1000, 1000});
+  // this->selected_dumps->setSizePolicy(QSizePolicy::Policy::Expanding);
   this->selected_dumps->show();
   this->selected_dumps->setSelectionMode(QAbstractItemView::MultiSelection);
   horizontalLayout->addWidget(selected_dumps);
@@ -74,25 +78,29 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
                      }
                    });
 
-  QObject::connect(this->horizScroll, &QScrollBar::actionTriggered, this,
-                   [this](int value) {
-                     if (value == 7) {
-                      unsigned long long diff = this->rightFOVborder - this->leftFOVborder;
-                      this->leftFOVborder = this->horizScroll->sliderPosition();
-                      this->rightFOVborder = this->leftFOVborder + diff <= this->maxrightborder ? this->leftFOVborder+diff : this->maxrightborder; 
-                     }
-                   });
+  QObject::connect(
+      this->horizScroll, &QScrollBar::actionTriggered, this, [this](int value) {
+        if (value == 7) {
+          unsigned long long diff = this->rightFOVborder - this->leftFOVborder;
+          this->leftFOVborder = this->horizScroll->sliderPosition();
+          this->rightFOVborder =
+              this->leftFOVborder + diff <= this->maxrightborder
+                  ? this->leftFOVborder + diff
+                  : this->maxrightborder;
+        }
+      });
 
-      if (!this->data->timepoints.size()) {
+  if (!this->data->timepoints.size()) {
     this->data->warns.push_back("The timing diagram has no time points!");
-  }  else {
+  } else {
     this->leftFOVborder = this->data->timepoints[0].time;
     this->rightFOVborder = this->data->timepoints.back().time;
     this->minleftborder = this->leftFOVborder;
     this->maxrightborder = this->rightFOVborder;
     this->marker = this->leftFOVborder;
     this->horizScroll->setMinimum(this->leftFOVborder);
-    this->horizScroll->setMaximum(this->rightFOVborder-(this->maxrightborder-this->minleftborder));
+    this->horizScroll->setMaximum(this->rightFOVborder -
+                                  (this->maxrightborder - this->minleftborder));
   }
 
   QSize a = this->view->size();
@@ -101,6 +109,12 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
   qDebug() << this->view->sceneRect();
   this->view->centerOn(0, 0);
   this->plotUpdate();
+}
+
+VCDPlotter::~VCDPlotter() {
+  for (int i = 0; i < this->dumpsList.size(); i++) {
+    delete this->dumpsList[i];
+  }
 }
 
 void VCDPlotter::setHeightView(int height) {
@@ -215,7 +229,9 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
         this->vertScroll->sliderPosition() +
         one * (event->angleDelta().y() > 0 ? 1 : -1));
   }
-                      qDebug()<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << this->leftFOVborder+ this->rightFOVborder << this->leftFOVborder << this->rightFOVborder;
+  qDebug() << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+           << this->leftFOVborder + this->rightFOVborder << this->leftFOVborder
+           << this->rightFOVborder;
 }
 
 void VCDPlotter::plotUpdate() {
@@ -227,6 +243,7 @@ void VCDPlotter::plotUpdate() {
 
   this->view->waves->update();
 
-  this->horizScroll->setMaximum(this->maxrightborder-(this->rightFOVborder-this->leftFOVborder));
+  this->horizScroll->setMaximum(this->maxrightborder -
+                                (this->rightFOVborder - this->leftFOVborder));
   this->horizScroll->setSliderPosition(this->leftFOVborder);
 };

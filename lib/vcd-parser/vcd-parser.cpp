@@ -344,6 +344,10 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
   return vcd;
 };
 
+VCDParser::~VCDParser() {
+  delete this->tokenStream;
+}
+
 void VCDParser::error(std::string message, VCDData *vcd) {
   vcd->errors.push_back(message);
 }

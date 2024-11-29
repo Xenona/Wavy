@@ -78,7 +78,20 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
         this->vcdDataFiles.value(this->_VCDDataActive)
             .tab->addSelectedDumps(items, varData);
       });
+
+          QObject::connect(this->waveform_tabs, &QTabWidget::tabCloseRequested, this,
+                     &WavyMainWindow::closeTab);
 }
+
+void WavyMainWindow::closeTab(int idx) {
+  qDebug() << "idx" << idx;
+  // this->waveform_tabs->removeTab(idx);
+  VCDPlotter* tab = static_cast<VCDPlotter*>(this->waveform_tabs->widget(idx));
+
+  this->_VCDDataActive = tab->path;
+  this->removeActiveVCD();
+
+};
 
 void WavyMainWindow::loadVCDData(std::string path) {
   // load data
@@ -98,7 +111,7 @@ void WavyMainWindow::loadVCDData(std::string path) {
 
   if (!this->vcdDataFiles.contains(qstring_path)) {
     // creating tab
-    VCDPlotter *tab = new VCDPlotter(VCDData, this);
+    VCDPlotter *tab = new VCDPlotter(qstring_path, VCDData, this);
     this->waveform_tabs->addTab(tab,
                                 QString::fromStdString(path).split("/").last());
 
@@ -106,8 +119,8 @@ void WavyMainWindow::loadVCDData(std::string path) {
     ScopeTreeWidget *treeWidget = new ScopeTreeWidget(
         VCDData->scopes, this->ui->sidebar_scope_scroll_container);
 
-    this->vcdDataFiles.insert(qstring_path,
-                              {VCDData, tab, treeWidget, tab->selected_dumps});
+
+    this->vcdDataFiles.insert(qstring_path, {VCDData, tab, treeWidget});
 
     QObject::connect(treeWidget, &QTreeWidget::itemSelectionChanged, this,
                      [this]() {
@@ -134,7 +147,7 @@ void WavyMainWindow::setVCDDataActive(QString path) {
   this->waveform_tabs->setCurrentWidget(this->vcdDataFiles.value(path).tab);
 
   // filling scope tab
-  this->vcdDataFiles.value(this->_VCDDataActive).scopeTree->setParent(NULL);
+  this->vcdDataFiles.value(path).scopeTree->setParent(NULL);
   this->vcdDataFiles.value(path).scopeTree->setParent(
       this->sidebar_scope_scroll_container);
   this->vcdDataFiles.value(path).scopeTree->setGeometry({0, 0, 1000, 1000});
@@ -146,4 +159,32 @@ void WavyMainWindow::setVCDDataActive(QString path) {
 
   // setting current file focused;
   this->_VCDDataActive = path;
+}
+
+void WavyMainWindow::removeActiveVCD() {
+  if (!this->vcdDataFiles.empty()) {
+    GUIVCDInfo info = this->vcdDataFiles.value(this->_VCDDataActive);
+    info.scopeTree->clearSelection();
+    this->vcdDataFiles.remove(this->_VCDDataActive);
+
+    if (!this->vcdDataFiles.empty()) {
+
+    QString next = this->vcdDataFiles.cbegin().key();
+    this->setVCDDataActive(next);
+    } 
+
+    info.scopeTree->setParent(NULL);
+    delete info.vcddata;
+    delete info.tab;
+    delete info.scopeTree;
+  }
+  this->sidebar_scope_scroll_container->children();
+}
+
+WavyMainWindow::~WavyMainWindow() {
+  while (!this->vcdDataFiles.empty()) {
+    removeActiveVCD();
+  }
+  delete this->parser;
+  delete this->ui;
 }

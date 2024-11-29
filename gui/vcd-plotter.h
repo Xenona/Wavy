@@ -11,7 +11,8 @@
 class VCDPlotter : public QWidget {
 
 public:
-  VCDPlotter(VCDData *data, QWidget *parent);
+  VCDPlotter(QString path, VCDData *data, QWidget *parent);
+  ~VCDPlotter();
   void wheelEvent(QWheelEvent *event) override;
   QTreeWidget *selected_dumps;
   QList<QTreeWidgetItem *> dumpsList;
@@ -32,6 +33,7 @@ public:
 
   long long currentHeight = 0;
 
+  QString path;
 private:
   int MAX_ZOOM_DELTA = 30;
 

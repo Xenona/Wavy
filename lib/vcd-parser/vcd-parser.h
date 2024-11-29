@@ -23,6 +23,8 @@ class VCDParser {
 
 public:
   VCDData *getVCDData(VCDTokenStream *tokenStream);
+  ~VCDParser();
+
   void dbg(VCDTokenStream *s);
 
 private:

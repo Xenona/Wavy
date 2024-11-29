@@ -32,7 +32,7 @@
        </property>
        <property name="maximumSize">
         <size>
-         <width>400</width>
+         <width>350</width>
          <height>16777215</height>
         </size>
        </property>
@@ -49,24 +49,9 @@
         <attribute name="title">
          <string>Scope</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
-          <layout class="QHBoxLayout" name="sidebar_scope_header">
-           <property name="sizeConstraint">
-            <enum>QLayout::SetMinimumSize</enum>
-           </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
             <widget class="QToolButton" name="sidebar_scope_button_ok">
              <property name="enabled">
@@ -77,7 +62,7 @@
              </property>
              <property name="icon">
               <iconset theme="dialog-ok">
-               <normaloff>../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../.designer/backup</iconset>
+               <normaloff>../../../../../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../../../../../.designer/backup</iconset>
              </property>
              <property name="checkable">
               <bool>false</bool>
@@ -107,51 +92,25 @@
              </property>
              <property name="icon">
               <iconset theme="window-close">
-               <normaloff>../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../.designer/backup</iconset>
+               <normaloff>../../../../../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../../../../../.designer/backup</iconset>
              </property>
             </widget>
            </item>
           </layout>
          </item>
          <item>
-          <widget class="QScrollArea" name="sidebar_scope_scroll">
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAsNeeded</enum>
-           </property>
-           <property name="horizontalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOn</enum>
-           </property>
-           <property name="widgetResizable">
-            <bool>true</bool>
-           </property>
-           <widget class="QWidget" name="sidebar_scope_scroll_container">
-            <property name="geometry">
-             <rect>
-              <x>0</x>
-              <y>0</y>
-              <width>367</width>
-              <height>509</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <property name="spacing">
-              <number>0</number>
+          <layout class="QVBoxLayout" name="layou">
+           <item>
+            <widget class="QWidget" name="sidebar_scope_scroll_container" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-            </layout>
-           </widget>
-          </widget>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </widget>
@@ -213,7 +172,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
              </property>
              <property name="icon">
               <iconset theme="window-close">
-               <normaloff>../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../.designer/backup</iconset>
+               <normaloff>../../../../../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../../../../../.designer/backup</iconset>
              </property>
             </widget>
            </item>
@@ -242,7 +201,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>367</width>
+              <width>317</width>
               <height>517</height>
              </rect>
             </property>
@@ -276,6 +235,12 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
                </item>
                <item>
                 <widget class="QTreeWidget" name="treeWidget">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="horizontalScrollBarPolicy">
                   <enum>Qt::ScrollBarAlwaysOn</enum>
                  </property>
@@ -293,6 +258,12 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
                  </property>
                  <property name="selectionMode">
                   <enum>QAbstractItemView::MultiSelection</enum>
+                 </property>
+                 <property name="selectionBehavior">
+                  <enum>QAbstractItemView::SelectColumns</enum>
+                 </property>
+                 <property name="indentation">
+                  <number>40</number>
                  </property>
                  <property name="animated">
                   <bool>true</bool>
@@ -395,7 +366,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
   <action name="action_open">
    <property name="icon">
     <iconset theme="save">
-     <normaloff>../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../.designer/backup</iconset>
+     <normaloff>../../../../../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../../../../../.designer/backup</iconset>
    </property>
    <property name="text">
     <string>Open...</string>
@@ -410,7 +381,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
   <action name="action_save">
    <property name="icon">
     <iconset theme="save">
-     <normaloff>../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../.designer/backup</iconset>
+     <normaloff>../../../../../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../../../../../.designer/backup</iconset>
    </property>
    <property name="text">
     <string>Save</string>
