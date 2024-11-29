@@ -8,6 +8,7 @@
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QWheelEvent>
+#include <cmath>
 #include <qabstractitemview.h>
 #include <qabstractspinbox.h>
 #include <qboxlayout.h>
@@ -65,7 +66,6 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
   verticalLayout_2->addWidget(this->horizScroll);
   splitter->addWidget(verticalLayoutWidget);
   verticalLayout_12->addWidget(splitter);
-  // this->leftFOVborder = this->data->timepoints[0];
   QObject::connect(this->vertScroll, &QScrollBar::actionTriggered, this,
                    [this](int value) {
                      // todo fix the magic number
@@ -74,17 +74,26 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
                      }
                    });
 
-  if (!this->data->timepoints.size()) {
+  QObject::connect(this->horizScroll, &QScrollBar::actionTriggered, this,
+                   [this](int value) {
+                     if (value == 7) {
+                      unsigned long long diff = this->rightFOVborder - this->leftFOVborder;
+                      this->leftFOVborder = this->horizScroll->sliderPosition();
+                      this->rightFOVborder = this->leftFOVborder + diff <= this->maxrightborder ? this->leftFOVborder+diff : this->maxrightborder; 
+                     }
+                   });
+
+      if (!this->data->timepoints.size()) {
     this->data->warns.push_back("The timing diagram has no time points!");
-  } else {
-    // todo replace int with long long maybe
-    this->leftFOVborder = 0;
+  }  else {
+    this->leftFOVborder = this->data->timepoints[0].time;
     this->rightFOVborder = this->data->timepoints.back().time;
+    this->minleftborder = this->leftFOVborder;
+    this->maxrightborder = this->rightFOVborder;
     this->marker = this->leftFOVborder;
     this->horizScroll->setMinimum(this->leftFOVborder);
-    this->horizScroll->setMaximum(this->rightFOVborder);
+    this->horizScroll->setMaximum(this->rightFOVborder-(this->maxrightborder-this->minleftborder));
   }
-  // this->leftFOVborder = this->data->timepoints[0];
 
   QSize a = this->view->size();
   this->view->setSceneRect(0, 0, a.width(), a.height());
@@ -160,7 +169,7 @@ void VCDPlotter::zoomView(int delta) {
       this->rightFOVborder = this->data->timepoints.back().time;
     }
   }
-  // todo call update on canvas
+  this->plotUpdate();
 }
 
 void VCDPlotter::addSelectedDumps(QList<QTreeWidgetItem *> items,
@@ -189,11 +198,11 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
     qDebug() << "alt+ctrl";
 
     this->zoomView(event->angleDelta().x() > 0 ? 10 : -10);
-  }else if (alt) {
+  } else if (alt) {
     qDebug() << "alt";
 
     this->sideShiftView(event->angleDelta().x() > 0 ? 10 : -10);
-  }  else if (shift) {
+  } else if (shift) {
     qDebug() << "shift";
     this->sideShiftView(event->angleDelta().y() > 0 ? 1 : -1);
   } else if (ctrl) {
@@ -202,21 +211,22 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   } else {
     qDebug() << "height";
     // todo doesn't work
-    this->vertScroll->setSliderPosition(this->vertScroll->sliderPosition() +
-                                        one*(event->angleDelta().y() > 0 ? 1 : -1));
+    this->vertScroll->setSliderPosition(
+        this->vertScroll->sliderPosition() +
+        one * (event->angleDelta().y() > 0 ? 1 : -1));
   }
+                      qDebug()<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << this->leftFOVborder+ this->rightFOVborder << this->leftFOVborder << this->rightFOVborder;
 }
 
 void VCDPlotter::plotUpdate() {
-  // todo
 
   this->view->scrollHeight = this->currentHeight;
   if (this->dumpsList.length())
     this->view->itemRect =
         this->selected_dumps->visualItemRect(this->dumpsList[0]);
-  // this->view->update();
-  // this->view->repaint();
+
   this->view->waves->update();
 
-  qDebug() << "Called update";
+  this->horizScroll->setMaximum(this->maxrightborder-(this->rightFOVborder-this->leftFOVborder));
+  this->horizScroll->setSliderPosition(this->leftFOVborder);
 };
