@@ -29,12 +29,12 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
   float y = WAVES_GAP;
   int a = this->top->top->leftFOVborder;
-  int b = this->top->top->rightFOVborder - 100;
+  int b = this->top->top->rightFOVborder;
   if (this->top->data->timepoints.size())
-    HEXAGONS_STEP = ((this->top->data->timepoints.back().time -
-                      this->top->data->timepoints[0].time) /
-                     (b - a)) %
-                    10;
+    HEXAGONS_STEP = std::min(((this->top->data->timepoints.back().time -
+                               this->top->data->timepoints[0].time) /
+                              (b - a)),
+                             10);
   else {
     HEXAGONS_STEP = 1;
   }
@@ -50,14 +50,16 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
     float prevScenePos = 0;
 
-    float prevFloat = 0;
+    float prevFloat = INFINITY;
     long long prev = 0;
     bool inited = false;
+    bool vecInited = false;
 
     bool isVector = false;
 
     float yLow = y + lineHeight - WAVES_GAP;
     float yHalf = y + (yLow - y) / 2;
+    auxPath.moveTo(0, yLow);
 
     // iterating over time points (events)
     for (auto &timepoint : this->top->data->timepoints) {
@@ -66,23 +68,72 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
       int t = timepoint.time;
 
       float scenePos = ((t - a) / (float)(b - a)) * width;
+      int idx = this->isVector(dump, this->top->vars[i].identifier);
+      if (idx != -1) {
+        isVector = true;
+      }
       if (scenePos >= 0 && scenePos <= width) {
 
-        int idx = this->isVector(dump, this->top->vars[i].identifier);
-        qDebug() << idx;
         if (idx != -1) {
-          idx = this->isVector(dump, this->top->vars[i].identifier);
           // todo
           // vector drawing
           isVector = true;
           if (!inited) {
-            prevFloat = dump.vecs[idx].valueVecDecFloat;
-            prev = dump.vecs[idx].valueVecDec;
-            inited = true;
-            path.moveTo(0, yHalf);
-            path.lineTo(HEXAGONS_STEP, y);
-            auxPath.moveTo(0, yHalf);
-            auxPath.lineTo(HEXAGONS_STEP, yLow);
+            if (prevFloat == INFINITY) {
+              prevFloat = dump.vecs[idx].valueVecDecFloat;
+              prev = dump.vecs[idx].valueVecDec;
+              inited = true;
+              if (t == 0) {
+
+                path.moveTo(0, yHalf);
+                path.lineTo(HEXAGONS_STEP, y);
+                auxPath.moveTo(0, yHalf);
+                auxPath.lineTo(HEXAGONS_STEP, yLow);
+              } else {
+                path.moveTo(0, y);
+                auxPath.moveTo(0, yLow);
+                path.lineTo(scenePos - HEXAGONS_STEP, y);
+                auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow);
+              }
+            } else {
+              if ((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
+                  (prev != dump.vecs[idx].valueVecDec)) {
+                path.lineTo(scenePos - HEXAGONS_STEP, y);
+                path.lineTo(scenePos, yHalf);
+                path.lineTo(scenePos + HEXAGONS_STEP, y);
+
+                auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow);
+                auxPath.lineTo(scenePos, yHalf);
+                auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow);
+
+                float availLen = scenePos - prevScenePos;
+
+                // QTextItem
+                painter->save();
+                QFont font = painter->font();
+                font.setPixelSize(lineHeight - WAVES_GAP * 3);
+                painter->setFont(font);
+                QFontMetricsF fm(font);
+                std::string valInt = std::to_string(prev);
+                std::string valFloat = std::to_string(prevFloat);
+
+                QString val = QString::fromStdString(
+                    dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt);
+                float valWidth = fm.horizontalAdvance(val);
+                QRectF rect = {prevScenePos, y, availLen,
+                               lineHeight - WAVES_GAP};
+                if (valWidth <= availLen) {
+                  painter->drawText(rect, Qt::AlignCenter, val);
+                } else {
+                  painter->drawText(rect, Qt::AlignCenter, ".");
+                }
+                painter->restore();
+
+                prevScenePos = scenePos;
+                prev = dump.vecs[idx].valueVecDec;
+                prevFloat = dump.vecs[idx].valueVecDecFloat;
+              }
+            }
 
             float availLen = scenePos - prevScenePos;
 
@@ -113,13 +164,11 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
               QString val = QString::fromStdString(
                   dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt);
               float valWidth = fm.horizontalAdvance(val);
-              QRectF rect = {prevScenePos, y, availLen,
-                              lineHeight - WAVES_GAP};
+              QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
               if (valWidth <= availLen) {
                 painter->drawText(rect, Qt::AlignCenter, val);
               } else {
                 painter->drawText(rect, Qt::AlignCenter, ".");
-
               }
               painter->restore();
 
@@ -139,12 +188,21 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           if (idx != -1) {
 
             if (!inited) {
-              prev = dump.scals[idx].value;
               inited = true;
               // start low if the first bit is 0
               if (prev == 0) {
                 path.moveTo(0, yLow);
               }
+
+              if (prev == 0 && dump.scals[idx].value == 1) {
+                path.lineTo(scenePos, yLow);
+                path.lineTo(scenePos, y);
+              }
+              if (prev == 1 && dump.scals[idx].value == 0) {
+                path.lineTo(scenePos, y);
+                path.lineTo(scenePos, yLow);
+              }
+              prev = dump.scals[idx].value;
             } else {
 
               // draw an angle depending on state
@@ -167,6 +225,25 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
             // }
           }
         }
+      } else if (scenePos > width) {
+        break;
+      } else {
+
+        if (isVector && idx != -1) {
+          prev = dump.vecs[idx].valueVecDec;
+          prevFloat = dump.vecs[idx].valueVecDecFloat;
+        } else {
+          idx = this->isScalar(dump, this->top->vars[i].identifier);
+          if (idx != -1) {
+            prev = dump.scals[idx].value;
+            if (prev == 1) {
+              path.moveTo(scenePos, y);
+            } else if (prev == 0) {
+              path.moveTo(scenePos, yLow);
+            }
+          }
+          // qDebug() << "STOP";
+        }
       };
       // qDebug() << "INFO" << j << a << b << width.width();
     }
@@ -174,8 +251,10 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     if (!isVector) {
 
       if (prev == 1) {
+        // path.moveTo(0, y);
         path.lineTo(width, y);
       } else if (prev == 0) {
+        // path.moveTo(0, yLow);
         path.lineTo(width, yLow);
       }
     } else {

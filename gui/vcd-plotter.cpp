@@ -1,11 +1,13 @@
 #include "vcd-plotter.h"
 #include "vcd-graphics-view.h"
+#include "waves.h"
 #include <QGraphicsScene>
 #include <QHeaderView>
 #include <QPainterPath>
 #include <QScrollBar>
 #include <QSplitter>
 #include <QTreeWidget>
+#include <QWheelEvent>
 #include <qabstractitemview.h>
 #include <qabstractspinbox.h>
 #include <qboxlayout.h>
@@ -21,22 +23,21 @@
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <sched.h>
-#include "waves.h"
-#include <QWheelEvent>
 
 // todo
 // add enter to add selected dumps
 
-VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent) : QWidget(parent) 
+VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent)
+    : QWidget(parent)
 
 {
   this->data = data;
-  QVBoxLayout* verticalLayout_12 = new QVBoxLayout(this);
-  QSplitter * splitter = new QSplitter(this);
+  QVBoxLayout *verticalLayout_12 = new QVBoxLayout(this);
+  QSplitter *splitter = new QSplitter(this);
   splitter->setOrientation(Qt::Horizontal);
   splitter->setChildrenCollapsible(false);
-  QWidget* verticalLayoutWidget_4 = new QWidget(splitter);
-  QHBoxLayout* horizontalLayout = new QHBoxLayout(verticalLayoutWidget_4);
+  QWidget *verticalLayoutWidget_4 = new QWidget(splitter);
+  QHBoxLayout *horizontalLayout = new QHBoxLayout(verticalLayoutWidget_4);
   horizontalLayout->setSpacing(0);
   horizontalLayout->setContentsMargins(0, 0, 0, 0);
   this->selected_dumps = new QTreeWidget(verticalLayoutWidget_4);
@@ -50,14 +51,14 @@ VCDPlotter::VCDPlotter(VCDData *data, QWidget *parent) : QWidget(parent)
   horizontalLayout->addWidget(selected_dumps);
   this->vertScroll = this->selected_dumps->verticalScrollBar();
   splitter->addWidget(verticalLayoutWidget_4);
-  QWidget * verticalLayoutWidget = new QWidget(splitter);
-  QVBoxLayout * verticalLayout_2 = new QVBoxLayout(verticalLayoutWidget);
+  QWidget *verticalLayoutWidget = new QWidget(splitter);
+  QVBoxLayout *verticalLayout_2 = new QVBoxLayout(verticalLayoutWidget);
   verticalLayout_2->setSpacing(0);
   verticalLayout_2->setContentsMargins(0, 0, 0, 0);
 
-  this->view = new VCDGraphicsView(this, this->varsList, this->dumpsList, this->data,
-                                   verticalLayoutWidget);
-  
+  this->view = new VCDGraphicsView(this, this->varsList, this->dumpsList,
+                                   this->data, verticalLayoutWidget);
+
   verticalLayout_2->addWidget(this->view);
   this->horizScroll = new QScrollBar(verticalLayoutWidget);
   this->horizScroll->setOrientation(Qt::Horizontal);
@@ -113,19 +114,19 @@ void VCDPlotter::sideShiftView(int delta) {
     }
   } else {
     // todo
-    // if (this->leftFOVborder + delta <
-    //     this->data->timepoints.back().time - this->MAX_ZOOM_DELTA) {
-    //   this->leftFOVborder += delta;
-    // } else {
-    //   this->leftFOVborder =
-    //       this->data->timepoints.back().time - this->MAX_ZOOM_DELTA;
-    // }
+    if (this->leftFOVborder - delta <
+        this->data->timepoints.back().time - this->MAX_ZOOM_DELTA) {
+      this->leftFOVborder -= delta;
+    } else {
+      this->leftFOVborder =
+          this->data->timepoints.back().time - this->MAX_ZOOM_DELTA;
+    }
 
-    // if (this->rightFOVborder + delta < this->data->timepoints.back().time) {
-    //   this->rightFOVborder += delta;
-    // } else {
-    //   this->rightFOVborder = this->data->timepoints.back().time;
-    // }
+    if (this->rightFOVborder - delta <= this->data->timepoints.back().time) {
+      this->rightFOVborder -= delta;
+    } else {
+      this->rightFOVborder = this->data->timepoints.back().time;
+    }
   }
 
   this->plotUpdate();
@@ -144,16 +145,19 @@ void VCDPlotter::zoomView(int delta) {
       this->rightFOVborder = this->leftFOVborder + this->MAX_ZOOM_DELTA;
     }
   } else {
-    if (this->leftFOVborder - delta >= 0) {
-      this->leftFOVborder -= delta;
+    if (this->leftFOVborder + delta >= 0) {
+      this->leftFOVborder += delta;
     } else {
       this->leftFOVborder = 0;
     }
 
-    if (this->rightFOVborder + delta < this->data->timepoints.size()) {
-      this->rightFOVborder += delta;
+    if (!this->data->timepoints.size())
+      return;
+
+    if (this->rightFOVborder - delta <= this->data->timepoints.back().time) {
+      this->rightFOVborder -= delta;
     } else {
-      this->rightFOVborder = this->data->timepoints.size() - 1;
+      this->rightFOVborder = this->data->timepoints.back().time;
     }
   }
   // todo call update on canvas
@@ -172,19 +176,39 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   // if shift, scroll left/right, if ctrl, zoom in out
   // where mouse points, if just like that, zoom in out
   // where marker is
-  qDebug() << event;
-  int one = event->inverted()?1:-1;
+  qDebug() << event->modifiers();
+  int one = event->inverted() ? 1 : -1;
 
-  if (event->angleDelta().y() > 0) {
-    this->vertScroll->setSliderPosition(this->vertScroll->sliderPosition()+one);
+  bool shift = event->modifiers() & Qt::ShiftModifier;
+  bool ctrl = event->modifiers() & Qt::ControlModifier;
+  bool alt = event->modifiers() & Qt::AltModifier;
+
+  if (shift && ctrl) {
+    qDebug() << "marker";
+  } else if (alt && ctrl) {
+    qDebug() << "alt+ctrl";
+
+    this->zoomView(event->angleDelta().x() > 0 ? 10 : -10);
+  }else if (alt) {
+    qDebug() << "alt";
+
+    this->sideShiftView(event->angleDelta().x() > 0 ? 10 : -10);
+  }  else if (shift) {
+    qDebug() << "shift";
+    this->sideShiftView(event->angleDelta().y() > 0 ? 1 : -1);
+  } else if (ctrl) {
+    qDebug() << "mouse";
+    this->zoomView(event->angleDelta().y() > 0 ? 1 : -1);
   } else {
-    this->vertScroll->setSliderPosition(this->vertScroll->sliderPosition()-one);
+    qDebug() << "height";
+    // todo doesn't work
+    this->vertScroll->setSliderPosition(this->vertScroll->sliderPosition() +
+                                        one*(event->angleDelta().y() > 0 ? 1 : -1));
   }
 }
 
 void VCDPlotter::plotUpdate() {
   // todo
-
 
   this->view->scrollHeight = this->currentHeight;
   if (this->dumpsList.length())
@@ -193,7 +217,6 @@ void VCDPlotter::plotUpdate() {
   // this->view->update();
   // this->view->repaint();
   this->view->waves->update();
-
 
   qDebug() << "Called update";
 };
