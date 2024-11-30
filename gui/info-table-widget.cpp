@@ -3,7 +3,7 @@
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include <qtablewidget.h>
-
+#include <string>
 
 InfoTableWidget::InfoTableWidget(VCDData *data) {
 
@@ -29,11 +29,26 @@ InfoTableWidget::InfoTableWidget(VCDData *data) {
   QTableWidgetItem *__qtablewidgetitem7 = new QTableWidgetItem();
   this->setVerticalHeaderItem(6, __qtablewidgetitem7);
   QTableWidgetItem *__qtablewidgetitem8 = new QTableWidgetItem();
-  __qtablewidgetitem8->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+  __qtablewidgetitem8->setFlags(Qt::ItemIsEnabled);
   this->setItem(0, 0, __qtablewidgetitem8);
   QTableWidgetItem *__qtablewidgetitem9 = new QTableWidgetItem();
-  __qtablewidgetitem9->setFlags(Qt::NoItemFlags);
+  __qtablewidgetitem9->setFlags(Qt::ItemIsEnabled);
   this->setItem(1, 0, __qtablewidgetitem9);
+  QTableWidgetItem *__qtablewidgetitem10 = new QTableWidgetItem();
+  __qtablewidgetitem10->setFlags(Qt::ItemIsEnabled);
+  this->setItem(2, 0, __qtablewidgetitem10);
+  QTableWidgetItem *__qtablewidgetitem11 = new QTableWidgetItem();
+  __qtablewidgetitem11->setFlags(Qt::ItemIsEnabled);
+  this->setItem(3, 0, __qtablewidgetitem11);
+  QTableWidgetItem *__qtablewidgetitem12 = new QTableWidgetItem();
+  __qtablewidgetitem12->setFlags(Qt::ItemIsEnabled);
+  this->setItem(4, 0, __qtablewidgetitem12);
+  QTableWidgetItem *__qtablewidgetitem13 = new QTableWidgetItem();
+  __qtablewidgetitem13->setFlags(Qt::ItemIsEnabled);
+  this->setItem(5, 0, __qtablewidgetitem13);
+  QTableWidgetItem *__qtablewidgetitem14 = new QTableWidgetItem();
+  __qtablewidgetitem14->setFlags(Qt::ItemIsEnabled);
+  this->setItem(6, 0, __qtablewidgetitem14);
   this->setObjectName("info_table");
   this->horizontalHeader()->setVisible(false);
   this->horizontalHeader()->setStretchLastSection(true);
@@ -68,10 +83,36 @@ InfoTableWidget::InfoTableWidget(VCDData *data) {
   const bool __sortingEnabled = this->isSortingEnabled();
   this->setSortingEnabled(false);
   QTableWidgetItem *___qtablewidgetitem8 = this->item(0, 0);
-  ___qtablewidgetitem8->setText(
-      QCoreApplication::translate("WavyMainWindow", "sfse", nullptr));
+  ___qtablewidgetitem8->setText(QString::fromStdString(data->date.date));
   QTableWidgetItem *___qtablewidgetitem9 = this->item(1, 0);
-  ___qtablewidgetitem9->setText(
-      QCoreApplication::translate("WavyMainWindow", "sefsef", nullptr));
+  ___qtablewidgetitem9->setText(QString::fromStdString(data->version.version));
+  QTableWidgetItem *___qtablewidgetitem10 = this->item(2, 0);
+  ___qtablewidgetitem10->setText(QString::fromStdString(
+      std::to_string(data->timescale.precision) + " " + data->timescale.unit));
+  QTableWidgetItem *___qtablewidgetitem11 = this->item(3, 0);
+  QString cms;
+  for (auto& c: data->comments) {
+    cms += c.comment + '\n';
+  }
+  ___qtablewidgetitem11->setText(cms);
+  QTableWidgetItem *___qtablewidgetitem12 = this->item(4, 0);
+  QString warns;
+  for (auto& w: data->warns) {
+    warns += w + '\n';
+  }
+  ___qtablewidgetitem12->setText(warns);
+  QTableWidgetItem *___qtablewidgetitem13 = this->item(5, 0);
+  QString errors;
+  for (auto& e: data->errors) {
+    errors += e + '\n';
+  }
+  ___qtablewidgetitem13->setText(warns);
+  QTableWidgetItem *___qtablewidgetitem14 = this->item(6, 0);
+  if (data->timepoints.size()) 
+  ___qtablewidgetitem14->setText(QString::fromStdString(std::to_string(data->timepoints.back().time)));
+
+  
+
+
   this->setSortingEnabled(__sortingEnabled);
 }

@@ -33,8 +33,6 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->ui->setupUi(this);
   this->waveform_tabs = ui->waveform_tabs;
   this->sidebar = ui->sidebar;
-  this->sidebar_objects_button_close = ui->sidebar_objects_button_close;
-  this->sidebar_scope_button_close = ui->sidebar_scope_button_close;
   this->sidebar_scope_button_ok = ui->sidebar_scope_button_ok;
   this->sidebar_objects_scroll_container = ui->sidebar_objects_scroll_container;
   this->sidebar_scope_scroll_container = ui->sidebar_scope_scroll_container;
