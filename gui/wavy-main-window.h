@@ -15,14 +15,16 @@
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <QTreeWidget>
+#include "info-table-widget.h"
 #include "scope-tree-widget.h"
 #include "vcd-plotter.h"
+#include <QTableWidget>
 
 struct GUIVCDInfo {
   VCDData* vcddata;
   VCDPlotter* tab;
   ScopeTreeWidget* scopeTree;
-  // QTreeWidget* selectedTree;
+  InfoTableWidget* table;
 };
 
 
@@ -44,8 +46,10 @@ public:
   QToolButton *sidebar_objects_button_close;
   QToolButton *sidebar_scope_button_close;
   QToolButton *sidebar_scope_button_ok;
-  QListWidget *objects_list;
+  QWidget *sidebar_objects_scroll_container;
   QWidget *sidebar_scope_scroll_container;
+  QVBoxLayout *l_9;
+  QVBoxLayout *l_10;
   QScrollArea *waveform_scroll;
   QAction *action_open;
   QAction *action_save;

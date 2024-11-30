@@ -43,7 +43,7 @@
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="sidebar_scope">
         <attribute name="title">
@@ -108,6 +108,11 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <layout class="QVBoxLayout" name="verticalLayout_10">
+              <item>
+               <layout class="QVBoxLayout" name="l_9"/>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
@@ -116,7 +121,7 @@
        </widget>
        <widget class="QWidget" name="sidebar_objects">
         <attribute name="title">
-         <string>Objects</string>
+         <string>Details</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <property name="leftMargin">
@@ -219,101 +224,7 @@ QToolButton#sidebar_scope_button_close:hover, QToolButton#sidebar_objects_button
               <number>0</number>
              </property>
              <item>
-              <layout class="QVBoxLayout" name="sidebar_objects_list">
-               <item>
-                <widget class="QScrollBar" name="horizontalScrollBar">
-                 <property name="maximum">
-                  <number>10</number>
-                 </property>
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="invertedAppearance">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QTreeWidget" name="treeWidget">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="horizontalScrollBarPolicy">
-                  <enum>Qt::ScrollBarAlwaysOn</enum>
-                 </property>
-                 <property name="sizeAdjustPolicy">
-                  <enum>QAbstractScrollArea::AdjustToContents</enum>
-                 </property>
-                 <property name="dragEnabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="dragDropOverwriteMode">
-                  <bool>false</bool>
-                 </property>
-                 <property name="dragDropMode">
-                  <enum>QAbstractItemView::NoDragDrop</enum>
-                 </property>
-                 <property name="selectionMode">
-                  <enum>QAbstractItemView::MultiSelection</enum>
-                 </property>
-                 <property name="selectionBehavior">
-                  <enum>QAbstractItemView::SelectColumns</enum>
-                 </property>
-                 <property name="indentation">
-                  <number>40</number>
-                 </property>
-                 <property name="animated">
-                  <bool>true</bool>
-                 </property>
-                 <column>
-                  <property name="text">
-                   <string>1</string>
-                  </property>
-                 </column>
-                 <item>
-                  <property name="text">
-                   <string>New Item</string>
-                  </property>
-                  <property name="flags">
-                   <set>ItemIsDragEnabled|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>New Item</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>New Item</string>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>New Subitem</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>New Item</string>
-                   </property>
-                  </item>
-                 </item>
-                </widget>
-               </item>
-               <item>
-                <widget class="QScrollBar" name="verticalScrollBar">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QListWidget" name="objects_list"/>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="l_10"/>
              </item>
             </layout>
            </widget>

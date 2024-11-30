@@ -17,6 +17,7 @@ qt_add_executable(wavy_gui
   gui/scope-tree-widget.cpp
   gui/vcd-graphics-view.cpp
   gui/waves.cpp
+  gui/info-table-widget.cpp
 )
 
 

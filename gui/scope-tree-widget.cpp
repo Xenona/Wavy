@@ -1,9 +1,11 @@
 #include "scope-tree-widget.h"
 #include "wavy-main-window.h"
+#include <qboxlayout.h>
 #include <qobject.h>
+#include <qtreewidget.h>
 #include <string>
 
-ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
+ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data) {
 
   struct TreeNodeInfo {
     QTreeWidgetItem *self;
@@ -78,6 +80,12 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent) {
   this->setHeaderHidden(true);
   this->setSelectionMode(QAbstractItemView::ExtendedSelection);
   this->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
+  // layout = new QVBoxLayout();
+  // parent->setLayout(layout);
+  // layout->setContentsMargins(0, 0, 0, 0);
+  // l->addWidget(this);
+
 }
 
 ScopeTreeWidget::~ScopeTreeWidget() {

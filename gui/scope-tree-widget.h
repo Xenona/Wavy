@@ -4,13 +4,14 @@
 #include <qtreewidget.h>
 #include "../lib/vcd-parser/vcd-data.h"
 #include <QMainWindow>
+#include <QVBoxLayout>
 
 class ScopeTreeWidget: public QTreeWidget {
 
 public:
-  ScopeTreeWidget(std::vector<ScopeData> data, QWidget *parent = nullptr);
+  ScopeTreeWidget(std::vector<ScopeData> data);
   ~ScopeTreeWidget();
 
   QMap<QTreeWidgetItem*, VarData> varData;
-
+QVBoxLayout* layout;
 };

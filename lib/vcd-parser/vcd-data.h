@@ -86,8 +86,7 @@ struct TimestampData {
 // todo
 // make the lexer check whether timepoint integers grow only
 // otherwise a no-no and throw and error
-// todo 
-// deal with errors... 
+ 
 class VCDData {
 
 public:

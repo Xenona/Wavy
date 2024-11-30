@@ -183,8 +183,10 @@ Token VCDTokenStream::next() {
           this->charStream->die("Vector value has no identifier");
         // if state is 1st, then stream just gave a timestamp, so
         // it's necessary to take the time
-        if (this->processingDumps == 1)
+        if (this->processingDumps == 1) {
+          
           return {TokenType::SimulationTime, nextToken.value.substr(1)};
+        }  
         else
           return {TokenType::Identifier, nextToken.value};
       }

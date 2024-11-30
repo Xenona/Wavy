@@ -15,6 +15,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
   VCDData *vcd = new VCDData();
   this->tokenStream = tokenStream;
   std::stack<ScopeData> scopes;
+  long long prevTime = -1;
 
   while (this->tokenStream->peek().type != TokenType::NIL) {
     Token token;
@@ -68,6 +69,23 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
     case (ParserState::Data): {
       switch (token.type) {
       case (TokenType::SimulationTime): {
+        long long time;
+        try {
+          time = std::stoll(token.value);
+        } catch (const std::exception &e) {
+          this->error("Simulation time contains wrong characters. Cannot "
+                      "interpret as long long integer: " +
+                          token.value + ". Now assuming zero, which may lead to further errors.",
+                      vcd);
+          time = 0;
+        }
+        if (prevTime >= time) {
+          this->error("Simulation time should increase only, no repeating "
+                      "timings, no reversed timings. Moved from time " +
+                          std::to_string(prevTime) + " to time " + token.value +
+                          ". Exiting.",
+                      vcd);
+        }
         vcd->timepoints.push_back({.time = stoi(token.value), .data = {}});
         break;
       }
@@ -79,7 +97,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       };
 
       case (TokenType::ScalarValueChange): {
-         vcd->timepoints.back().data.scals.push_back(
+        vcd->timepoints.back().data.scals.push_back(
             {.value = token.value[0] - '0',
              .identifier = token.value.substr(1)});
         break;
@@ -94,7 +112,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
         if (token.value[0] == 'b' || token.value[0] == 'B') {
           ll = strtoll(token.value.substr(1).c_str(), nullptr, 2);
         }
-          vcd->timepoints.back().data.vecs.push_back(
+        vcd->timepoints.back().data.vecs.push_back(
             {.type = token.value[0],
              .valueVec = token.value.substr(1),
              .valueVecDec = ll,
@@ -103,7 +121,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       }
 
       case (TokenType::Identifier): {
-         vcd->timepoints.back().data.vecs.back().identifier = token.value;
+        vcd->timepoints.back().data.vecs.back().identifier = token.value;
         break;
       }
 
@@ -124,7 +142,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       }
       case (TokenType::DumpvarsKeyword): {
 
-         vcd->timepoints.back().data.type = DumpType::Vars;
+        vcd->timepoints.back().data.type = DumpType::Vars;
         this->state = ParserState::Dumps;
         break;
       }
@@ -318,7 +336,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
             {.value = token.value[0] - '0',
              .identifier = token.value.substr(1)});
       } else if (token.type == TokenType::VectorValueChange) {
-       float f = 0;
+        float f = 0;
         long long ll = 0;
         if (token.value[0] == 'r' || token.value[0] == 'R') {
           f = stof(token.value.substr(1));
@@ -344,9 +362,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
   return vcd;
 };
 
-VCDParser::~VCDParser() {
-  delete this->tokenStream;
-}
+VCDParser::~VCDParser() { delete this->tokenStream; }
 
 void VCDParser::error(std::string message, VCDData *vcd) {
   vcd->errors.push_back(message);
