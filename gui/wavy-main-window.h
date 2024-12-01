@@ -59,6 +59,8 @@ public:
   QString VCDDataActive();
   void removeActiveVCD();
 
+  bool eventFilter(QObject *obj, QEvent *event);
+
   QTreeWidget* createTreeWidget(std::vector<ScopeData> data);
   void closeTab(int idx);
 

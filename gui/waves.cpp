@@ -11,9 +11,6 @@
 #include <qpoint.h>
 #include <string>
 
-// todo
-// get all destructors into work
-
 Waves::Waves(VCDGraphicsView *top)
     : top(top) {
 

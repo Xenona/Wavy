@@ -18,7 +18,7 @@ add_executable(hello_world
 target_include_directories(hello_world PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(hello_world pico_stdlib tinyusb_device tinyusb_board)
+target_link_libraries(hello_world pico_stdlib tinyusb_device tinyusb_board pico_multicore)
 
 pico_enable_stdio_usb(hello_world 1)
 pico_enable_stdio_uart(hello_world 0)

@@ -6,6 +6,7 @@
 #include "ui_wavy-main-window.h"
 #include "vcd-plotter.h"
 #include <QFileDialog>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include <QPair>
 #include <QSizePolicy>
@@ -42,6 +43,7 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->action_save = ui->action_save;
 
   this->parser = new VCDParser();
+  qApp->installEventFilter(this);
 
   QObject::connect(ui->action_open, &QAction::triggered, this, [this]() {
     QString filename = QFileDialog::getOpenFileName(
@@ -86,6 +88,43 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
 
   QObject::connect(this->waveform_tabs, &QTabWidget::tabCloseRequested, this,
                    &WavyMainWindow::closeTab);
+}
+
+bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
+  if (event->type() == QEvent::KeyPress) {
+    if (this->vcdDataFiles.count(_VCDDataActive)) {
+      if (obj == this->vcdDataFiles.value(_VCDDataActive).tab->selected_dumps) {
+
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->key() == Qt::Key_Delete) {
+          qDebug() << "key " << keyEvent->key() << "from" << obj;
+
+          auto &list = this->vcdDataFiles.value(_VCDDataActive).tab->dumpsList;
+          auto &tree =
+              this->vcdDataFiles.value(_VCDDataActive).tab->selected_dumps;
+          auto items = tree->selectedItems();
+          for (int i = 0; i < items.size(); i++) {
+            for (int j = 0; j < list.size(); ) {
+              if (items[i] == list[j]) {
+                list.erase(list.begin()+j);
+                this->vcdDataFiles.value(_VCDDataActive).tab->varsList.erase(this->vcdDataFiles.value(_VCDDataActive).tab->varsList.begin()+j);
+                break;
+              } else {
+                j++;
+              }
+            }
+          }
+
+          tree->clearSelection();
+          for (auto item : items) {
+            delete item;
+          }
+          this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
+        }
+      }
+    }
+  }
+  return QObject::eventFilter(obj, event);
 }
 
 void WavyMainWindow::closeTab(int idx) {
@@ -226,6 +265,8 @@ void WavyMainWindow::removeActiveVCD() {
     prevPath = this->_VCDDataActive;
     if (next != "") {
       this->setVCDDataActive(next);
+    } else {
+      this->_VCDDataActive = "";
     }
     this->vcdDataFiles.remove(prevPath);
 

@@ -109,6 +109,8 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, QWidget *parent)
   qDebug() << this->view->sceneRect();
   this->view->centerOn(0, 0);
   this->plotUpdate();
+ 
+
 }
 
 VCDPlotter::~VCDPlotter() {

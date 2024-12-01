@@ -17,8 +17,9 @@
 #include <sys/_types.h>
 // #include <pico/stdlib.h>
 // #include <pico/binary_info.h>
-// #include "pico/multicore.h"
+#include "pico/multicore.h"
 #include "bsp/board.h"
+
 #include "class/vendor/vendor_device.h"
 #include "device/usbd.h"
 
@@ -33,38 +34,43 @@ uint8_t finish = 0;
 uint16_t current_packet_id = 0;
 uint8_t current_write_buf = 0;
 uint8_t current_write_pos = 0;
+uint16_t timer_period = 0;
 
-bool __time_critical_func(writer_callback)(__unused struct repeating_timer *t) {
-  if (!enabled)
-    return true;
-
+void __time_critical_func(writer_thread)() {
   struct PICOY_PKT *current_packet = &send_buf[current_write_buf];
-  if (current_write_pos == 0) {
-    current_packet->packet_flags = 0;
-    current_packet->packet_id = current_packet_id++;
-    current_packet->time_start = time_us_64();
-  }
+  while(true) {
+    uint64_t ctime = time_us_64();
+    uint32_t gpio = gpio_get_all();
+    // if (!enabled) continue;
+    if(enabled) {
+      if (current_write_pos == 0) {
+        current_packet->packet_flags = 0;
+        current_packet->packet_id = current_packet_id++;
+        current_packet->time_start = time_us_64();
+      }
 
-  current_packet->data[current_write_pos] = gpio_get_all() & 0xff;
-  current_write_pos++;
+      current_packet->data[current_write_pos] = gpio & 0xff;
+      current_write_pos++;
 
-  if (current_write_pos >= PICOY_BODY) {
-    current_packet->time_duration = time_us_64() - current_packet->time_start;
-    
-    if (finish) {
-      current_packet->packet_flags |= PICOY_LAST;
-      enabled = false;
-      finish = false;
+      if (current_write_pos >= PICOY_BODY) {
+        current_packet->time_duration = time_us_64() - current_packet->time_start;
+        
+        if (finish) {
+          current_packet->packet_flags |= PICOY_LAST;
+          enabled = false;
+          finish = false;
+        }
+
+        current_write_buf++;
+        if (current_write_buf >= NUM_BUFFERS)
+          current_write_buf = 0;
+
+        current_packet = &send_buf[current_write_buf];
+        current_write_pos = 0;
+      }
     }
-
-    current_write_buf++;
-    if (current_write_buf >= NUM_BUFFERS)
-      current_write_buf = 0;
-
-    current_write_pos = 0;
+    busy_wait_until(ctime + timer_period);
   }
-
-  return true;
 }
 
 int main() {
@@ -80,7 +86,7 @@ int main() {
 
   uint readValue;
 
-  struct repeating_timer timer;
+  // struct repeating_timer timer;
   bool timer_enabled;
 
   stdio_init_all();
@@ -89,13 +95,15 @@ int main() {
   int current_read_buf = 0;
   uint16_t send_detector = 0;
 
+  multicore_launch_core1(writer_thread);
+
   while (true) {
     tud_task();
 
-    if (!enabled && timer_enabled) {
-      cancel_repeating_timer(&timer);
-      timer_enabled = false;
-    }
+    // if (!enabled && timer_enabled) {
+    //   cancel_repeating_timer(&timer);
+    //   timer_enabled = false;
+    // }
 
     int cwb = current_write_buf;
     if (cwb < NUM_BUFFERS) {
@@ -145,8 +153,9 @@ int main() {
 
           enabled = true;
           timer_enabled = true;
-          add_repeating_timer_us(-kp.timer_period, writer_callback, NULL,
-                                 &timer);
+          timer_period = kp.timer_period;
+          // add_repeating_timer_us(-kp.timer_period, writer_callback, NULL,
+                                //  &timer);
         }
       } else if (kp.state_flags & KERNELY_FINISH) {
         if (enabled) {
