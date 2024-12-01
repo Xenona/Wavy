@@ -104,7 +104,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       }
 
       case (TokenType::VectorValueChange): {
-        float f = 0;
+        double f = 0;
         long long ll = 0;
         if (token.value[0] == 'r' || token.value[0] == 'R') {
           f = stof(token.value.substr(1));
@@ -336,7 +336,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
             {.value = token.value[0] - '0',
              .identifier = token.value.substr(1)});
       } else if (token.type == TokenType::VectorValueChange) {
-        float f = 0;
+        double f = 0;
         long long ll = 0;
         if (token.value[0] == 'r' || token.value[0] == 'R') {
           f = stof(token.value.substr(1));

@@ -62,7 +62,7 @@ struct VectorValueChangeData {
   char type;
   std::string valueVec;
   long long valueVecDec;
-  float valueVecDecFloat;
+  double valueVecDecFloat;
   std::string identifier;
 };
 

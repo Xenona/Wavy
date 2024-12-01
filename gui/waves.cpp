@@ -24,7 +24,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
   const int WAVES_GAP = 5;
   int HEXAGONS_STEP;
 
-  float y = WAVES_GAP;
+  double y = WAVES_GAP;
   int a = this->top->top->leftFOVborder;
   int b = this->top->top->rightFOVborder;
   if (this->top->data->timepoints.size())
@@ -36,7 +36,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     HEXAGONS_STEP = 1;
   }
   int width = this->top->size().width();
-  float lineHeight = this->top->itemRect.height();
+  double lineHeight = this->top->itemRect.height();
 
   // iterating over variables starting from visible ones (scrollHeight idx)
   for (int i = this->top->scrollHeight; i < this->top->vars.length(); i++) {
@@ -45,17 +45,17 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     QPainterPath auxPath;
     path.moveTo(0, y);
 
-    float prevScenePos = 0;
+    double prevScenePos = 0;
 
-    float prevFloat = INFINITY;
+    double prevFloat = INFINITY;
     long long prev = 0;
     bool inited = false;
     bool vecInited = false;
 
     bool isVector = false;
 
-    float yLow = y + lineHeight - WAVES_GAP;
-    float yHalf = y + (yLow - y) / 2;
+    double yLow = y + lineHeight - WAVES_GAP;
+    double yHalf = y + (yLow - y) / 2;
     auxPath.moveTo(0, yLow);
 
     // iterating over time points (events)
@@ -64,7 +64,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
       DumpData dump = timepoint.data;
       int t = timepoint.time;
 
-      float scenePos = ((t - a) / (float)(b - a)) * width;
+      double scenePos = ((t - a) / (double)(b - a)) * width;
       int idx = this->isVector(dump, this->top->vars[i].identifier);
       if (idx != -1) {
         isVector = true;
@@ -123,7 +123,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
               }
             }
 
-            float availLen = scenePos - prevScenePos;
+            double availLen = scenePos - prevScenePos;
 
             prevScenePos = scenePos;
 
@@ -138,7 +138,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
               auxPath.lineTo(scenePos, yHalf);
               auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow);
 
-              float availLen = scenePos - prevScenePos;
+              double availLen = scenePos - prevScenePos;
 
               // QTextItem
               painter->save();
@@ -151,7 +151,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
               QString val = QString::fromStdString(
                   dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt);
-              float valWidth = fm.horizontalAdvance(val);
+              double valWidth = fm.horizontalAdvance(val);
               QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
               if (valWidth <= availLen) {
                 painter->drawText(rect, Qt::AlignCenter, val);
@@ -279,11 +279,11 @@ int Waves::isVector(DumpData data, std::string id) {
   return -1;
 }
 
-void Waves::addText(float scenePos, float prevScenePos, QPainter *painter,
-                    float lineHeight, int WAVES_GAP, long long prev,
-                    long long prevFloat, DumpData dump, int idx, float y,
+void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
+                    double lineHeight, int WAVES_GAP, long long prev,
+                    long long prevFloat, DumpData dump, int idx, double y,
                     std::string prevString) {
-  float availLen = scenePos - prevScenePos;
+  double availLen = scenePos - prevScenePos;
 
   // QTextItem
   painter->save();
@@ -301,7 +301,7 @@ void Waves::addText(float scenePos, float prevScenePos, QPainter *painter,
                     ? (dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt)
                     : prevString)
           : QString::fromStdString(prev == 0 ? valFloat : valInt);
-  float valWidth = fm.horizontalAdvance(val);
+  double valWidth = fm.horizontalAdvance(val);
   QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
   if (valWidth <= availLen) {
     painter->drawText(rect, Qt::AlignCenter, val);

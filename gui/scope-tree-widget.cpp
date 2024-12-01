@@ -1,12 +1,11 @@
 #include "scope-tree-widget.h"
+#include <QKeyEvent>
 #include <qboxlayout.h>
 #include <qobject.h>
 #include <qtreewidget.h>
 #include <string>
-#include <QKeyEvent>
 
-ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data)
-     {
+ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data) {
 
   struct TreeNodeInfo {
     QTreeWidgetItem *self;
@@ -22,12 +21,46 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data)
       i++;
     } else {
 
+      std::string t;
+      switch (datum.type) {
+      case ScopeTypes::NIL: {
+        break;
+      }
+      case ScopeTypes::Begin: {
+        t = " (begin)";
+        break;
+      }
+      case ScopeTypes::Fork: {
+        t = " (fork)";
+
+        break;
+      }
+      case ScopeTypes::Function: {
+        t = " (function)";
+
+        break;
+      }
+      case ScopeTypes::Module: {
+        t = " (module)";
+        break;
+      }
+      case ScopeTypes::Task: {
+        t = " (task)";
+
+        break;
+      }
+      case ScopeTypes::Undefined: {
+        t = " (undefined)";
+
+        break;
+      }
+      }
       QTreeWidgetItem *item;
       // root
       if (datum.parentScopeID == "") {
 
         item = new QTreeWidgetItem(this);
-        item->setText(0, QString::fromStdString(datum.name));
+        item->setText(0, QString::fromStdString(datum.name +t));
         item->setFlags(item->flags() & (~Qt::ItemIsSelectable));
 
         // todo switch by datum.type
@@ -44,7 +77,8 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data)
 
           item = new QTreeWidgetItem(parent.self);
           item->setFlags(item->flags() & (~Qt::ItemIsSelectable));
-          item->setText(0, QString::fromStdString(datum.name));
+
+          item->setText(0, QString::fromStdString(datum.name + t));
 
           treeMap.insert(QString::fromStdString(datum.ID), {item});
           datum.ID = "";
@@ -97,5 +131,3 @@ ScopeTreeWidget::~ScopeTreeWidget() {
     delete key;
   }
 }
-
- 
