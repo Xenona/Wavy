@@ -1,0 +1,11 @@
+*.cmd
+*.ko
+*.o
+*.out
+compile_commands.json
+.cache
+events.json
+modules.order
+Module.symvers
+*.mod*
+test
