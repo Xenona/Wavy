@@ -64,50 +64,54 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
         }
       });
 
-  QObject::connect(
-      this->sidebar_scope_button_ok, &QToolButton::clicked, this, [this]() {
-        QList<QTreeWidgetItem *> selectedElements =
-            this->vcdDataFiles.value(this->_VCDDataActive)
-                .scopeTree->selectedItems();
-
-        QList<QTreeWidgetItem *> items;
-        QList<VarData> varData;
-        for (auto it : selectedElements) {
-          auto newItem = it->clone();
-          auto f = QFont(newItem->font(0));
-          f.setPointSize(16);
-          newItem->setFont(0, f);
-          items.append(newItem);
-          varData.append(this->vcdDataFiles.value(this->_VCDDataActive)
-                             .scopeTree->varData.value(it));
-        }
-
-        this->vcdDataFiles.value(this->_VCDDataActive)
-            .tab->addSelectedDumps(items, varData);
-      });
+  QObject::connect(this->sidebar_scope_button_ok, &QToolButton::clicked, this,
+                   &WavyMainWindow::addSelectedDumps);
 
   QObject::connect(this->waveform_tabs, &QTabWidget::tabCloseRequested, this,
                    &WavyMainWindow::closeTab);
 }
 
+void WavyMainWindow::addSelectedDumps() {
+  QList<QTreeWidgetItem *> selectedElements =
+      this->vcdDataFiles.value(this->_VCDDataActive).scopeTree->selectedItems();
+
+  QList<QTreeWidgetItem *> items;
+  QList<VarData> varData;
+  for (auto it : selectedElements) {
+    auto newItem = it->clone();
+    auto f = QFont(newItem->font(0));
+    f.setPointSize(16);
+    newItem->setFont(0, f);
+    items.append(newItem);
+    varData.append(this->vcdDataFiles.value(this->_VCDDataActive)
+                       .scopeTree->varData.value(it));
+  }
+
+  this->vcdDataFiles.value(this->_VCDDataActive)
+      .tab->addSelectedDumps(items, varData);
+}
+
 bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
   if (event->type() == QEvent::KeyPress) {
     if (this->vcdDataFiles.count(_VCDDataActive)) {
+      QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
       if (obj == this->vcdDataFiles.value(_VCDDataActive).tab->selected_dumps) {
 
-        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if (keyEvent->key() == Qt::Key_Delete) {
-          qDebug() << "key " << keyEvent->key() << "from" << obj;
 
           auto &list = this->vcdDataFiles.value(_VCDDataActive).tab->dumpsList;
           auto &tree =
               this->vcdDataFiles.value(_VCDDataActive).tab->selected_dumps;
           auto items = tree->selectedItems();
           for (int i = 0; i < items.size(); i++) {
-            for (int j = 0; j < list.size(); ) {
+            for (int j = 0; j < list.size();) {
               if (items[i] == list[j]) {
-                list.erase(list.begin()+j);
-                this->vcdDataFiles.value(_VCDDataActive).tab->varsList.erase(this->vcdDataFiles.value(_VCDDataActive).tab->varsList.begin()+j);
+                list.erase(list.begin() + j);
+                this->vcdDataFiles.value(_VCDDataActive)
+                    .tab->varsList.erase(
+                        this->vcdDataFiles.value(_VCDDataActive)
+                            .tab->varsList.begin() +
+                        j);
                 break;
               } else {
                 j++;
@@ -120,6 +124,10 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
             delete item;
           }
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
+        }
+      } else if (obj == this->vcdDataFiles.value(_VCDDataActive).scopeTree) {
+        if (keyEvent->key() == Qt::Key_Return) {
+          this->addSelectedDumps();
         }
       }
     }

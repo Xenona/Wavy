@@ -3,8 +3,8 @@
 #include <qtmetamacros.h>
 #include <qtreewidget.h>
 #include "../lib/vcd-parser/vcd-data.h"
-#include <QMainWindow>
 #include <QVBoxLayout>
+
 
 class ScopeTreeWidget: public QTreeWidget {
 
@@ -13,5 +13,5 @@ public:
   ~ScopeTreeWidget();
 
   QMap<QTreeWidgetItem*, VarData> varData;
-QVBoxLayout* layout;
+  QVBoxLayout* layout;
 };

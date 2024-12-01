@@ -60,6 +60,7 @@ public:
   void removeActiveVCD();
 
   bool eventFilter(QObject *obj, QEvent *event);
+  void addSelectedDumps();
 
   QTreeWidget* createTreeWidget(std::vector<ScopeData> data);
   void closeTab(int idx);

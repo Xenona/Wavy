@@ -1,11 +1,12 @@
 #include "scope-tree-widget.h"
-#include "wavy-main-window.h"
 #include <qboxlayout.h>
 #include <qobject.h>
 #include <qtreewidget.h>
 #include <string>
+#include <QKeyEvent>
 
-ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data) {
+ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data)
+     {
 
   struct TreeNodeInfo {
     QTreeWidgetItem *self;
@@ -60,7 +61,9 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data) {
 
         this->varData.insert(varItem, var);
 
-        varItem->setText(0, QString::fromStdString(var.trueName + " [" + std::to_string(var.size) + ":0]"));
+        varItem->setText(0, QString::fromStdString(var.trueName + " [" +
+                                                   std::to_string(var.size) +
+                                                   ":0]"));
         // todo
         // set a proper icon depending on a var.type
         // if (var.size > 1) {
@@ -85,7 +88,6 @@ ScopeTreeWidget::ScopeTreeWidget(std::vector<ScopeData> data) {
   // parent->setLayout(layout);
   // layout->setContentsMargins(0, 0, 0, 0);
   // l->addWidget(this);
-
 }
 
 ScopeTreeWidget::~ScopeTreeWidget() {
@@ -95,3 +97,5 @@ ScopeTreeWidget::~ScopeTreeWidget() {
     delete key;
   }
 }
+
+ 
