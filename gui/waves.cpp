@@ -236,9 +236,11 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         } else {
           idx = this->isScalar(dump, this->top->vars[i].identifier);
           if (idx != -1) {
+            auto c = color(dump.scals[idx].stringValue);
+
             // draw an angle depending on state
             if (prevTime)
-              path.lineTo(scenePos, yPrev);
+              path.lineTo(scenePos, yPrev, c);
             double yNew = 0;
             if (is_half_state(dump.scals[idx].stringValue)) {
               yNew = yHalf;
@@ -250,7 +252,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
             if (!prevTime) {
               path.moveTo(0, yNew);
             }
-            path.lineTo(scenePos, yNew);
+            path.lineTo(scenePos, yNew, c);
             yPrev = yNew;
 
             // todo add x and z
@@ -292,9 +294,12 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         }
       };
       prevTime = t;
+      // prevScenePos = scenePos;
     }
     if (!isVector) {
-      path.lineTo(width, yPrev);
+      auto c = color(prevString);
+
+      path.lineTo(width, yPrev, c);
     } else {
       auto c = color(prevString);
 
@@ -360,13 +365,12 @@ void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
   QString val;
   if (prevString == "") {
 
-  val =
-      idx != -1
-          ? QString::fromStdString(
-                prevString == ""
-                    ? (dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt)
-                    : prevString)
-          : QString::fromStdString(prev == 0 ? valFloat : valInt);
+    val = idx != -1
+              ? QString::fromStdString(
+                    prevString == ""
+                        ? (dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt)
+                        : prevString)
+              : QString::fromStdString(prev == 0 ? valFloat : valInt);
   } else {
     val = QString::fromStdString(prevString);
   }

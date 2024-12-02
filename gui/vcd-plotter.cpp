@@ -151,7 +151,6 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
   QSize a = this->view->size();
   this->view->setSceneRect(0, 0, a.width(), a.height());
   this->view->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-  qDebug() << this->view->sceneRect();
   this->view->centerOn(0, 0);
   this->plotUpdate();
 }
@@ -263,7 +262,6 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   // if shift, scroll left/right, if ctrl, zoom in out
   // where mouse points, if just like that, zoom in out
   // where marker is
-  qDebug() << event->modifiers();
   int one = event->inverted() ? 1 : -1;
 
   bool shift = event->modifiers() & Qt::ShiftModifier;
@@ -271,36 +269,27 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   bool alt = event->modifiers() & Qt::AltModifier;
 
   if (shift && ctrl) {
-    qDebug() << "marker";
   } else if (alt && ctrl) {
-    qDebug() << "alt+ctrl";
 
     this->zoomView(event->angleDelta().x() > 0
                        ? (this->rightFOVborder - this->leftFOVborder) * 0.1
                        : -(this->rightFOVborder - this->leftFOVborder) * 0.1);
   } else if (alt) {
-    qDebug() << "alt";
 
     this->sideShiftView(event->angleDelta().x() > 0
                             ? (this->rightFOVborder - this->leftFOVborder) * 0.1
                             : -(this->rightFOVborder - this->leftFOVborder) *
                                   0.1);
   } else if (shift) {
-    qDebug() << "shift";
     this->sideShiftView(event->angleDelta().y() > 0 ? 1 : -1);
   } else if (ctrl) {
-    qDebug() << "mouse";
     this->zoomView(event->angleDelta().y() > 0 ? 1 : -1);
   } else {
-    qDebug() << "height";
     // todo doesn't work
     this->vertScroll->setSliderPosition(
         this->vertScroll->sliderPosition() +
         one * (event->angleDelta().y() > 0 ? 1 : -1));
   }
-  qDebug() << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-           << this->leftFOVborder + this->rightFOVborder << this->leftFOVborder
-           << this->rightFOVborder;
 }
 
 void VCDPlotter::plotUpdate() {

@@ -167,7 +167,6 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
 }
 
 void WavyMainWindow::closeTab(int idx) {
-  qDebug() << "idx" << idx;
   // this->waveform_tabs->removeTab(idx);
   VCDPlotter *tab = static_cast<VCDPlotter *>(this->waveform_tabs->widget(idx));
 
