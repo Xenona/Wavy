@@ -92,6 +92,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     path.moveTo(0, y);
 
     double prevScenePos = 0;
+    double otherPrevScenePos = 0;
 
     double prevFloat = INFINITY;
     long long prev = 0;
@@ -110,13 +111,15 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
     // iterating over time points (events)
     for (auto &timepoint : this->top->data->timepoints) {
-      
+
       DumpData dump = timepoint.data;
       double t = timepoint.time;
 
       double scenePos = ((t - a) / (double)(b - a)) * width;
-      painter->drawLine(QPointF{scenePos, 0}, QPointF{scenePos, (double)this->top->size().height()});
-      painter->drawText(scenePos, 20, QString::fromStdString(std::to_string(std::floor(t))));
+      painter->drawLine(QPointF{scenePos, 0},
+                        QPointF{scenePos, (double)this->top->size().height()});
+      painter->drawText(scenePos, 20,
+                        QString::fromStdString(std::to_string(std::floor(t))));
       int idx = this->isVector(dump, this->top->vars[i].identifier);
       if (idx != -1) {
         isVector = true;
@@ -152,11 +155,12 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                 auxPath.lineTo(HEXAGONS_STEP, yLow);
                 auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow);
                 auxPath.lineTo(scenePos, yHalf);
- 
+
                 std::string s = letter(dump.vecs[idx].valueVec);
 
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, otherPrevString, i);
+                              WAVES_GAP, prev, prevFloat, dump, idx, y,
+                              otherPrevString, i);
                 prevScenePos = scenePos;
               }
             } else {
@@ -174,7 +178,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
                 std::string s = letter(prevString);
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, otherPrevString, i);
+                              WAVES_GAP, prev, prevFloat, dump, idx, y,
+                              otherPrevString, i);
 
                 prevScenePos = scenePos;
                 prev = dump.vecs[idx].valueVecDec;
@@ -205,7 +210,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
               std::string s = letter(prevString);
               this->addText(scenePos, prevScenePos, painter, lineHeight,
-                            WAVES_GAP, prev, prevFloat, dump, idx, y, otherPrevString, i);
+                            WAVES_GAP, prev, prevFloat, dump, idx, y,
+                            otherPrevString, i);
 
               prevScenePos = scenePos;
               prev = dump.vecs[idx].valueVecDec;
@@ -224,7 +230,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           if (idx != -1) {
             // draw an angle depending on state
             if (prevTime)
-              path.lineTo(scenePos, yPrev);
+              path.lineTo(scenePos, yPrev, color(prevString));
             double yNew = 0;
             if (is_half_state(dump.scals[idx].stringValue)) {
               yNew = yHalf;
@@ -236,7 +242,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
             if (!prevTime) {
               path.moveTo(0, yNew);
             }
-            path.lineTo(scenePos, yNew);
+            path.lineTo(scenePos, yNew, color(dump.scals[idx].stringValue));
             yPrev = yNew;
 
             // todo add x and z
@@ -278,15 +284,19 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         }
       };
       prevTime = t;
-      // prevScenePos = scenePos;
+      otherPrevScenePos = scenePos;
     }
     if (!isVector) {
 
       if (!inited && b <= this->top->data->timepoints[0].time) {
         path.moveTo(0, yHalf);
+        std::string x = "x";
+        path.lineTo(width, yPrev, color(x));
+
+      } else {
+        path.lineTo(width, yPrev, color(otherPrevString));
       }
 
-      path.lineTo(width, yPrev);
     } else {
 
       path.lineTo(prevScenePos + HEXAGONS_STEP, y);
