@@ -11,6 +11,10 @@
 #include <qpoint.h>
 #include <string>
 
+bool is_half_state(std::string &v) {
+  return v == "x" || v == "X" || v == "z" || v == "Z";
+}
+
 Waves::Waves(VCDGraphicsView *top)
     : top(top) {
 
@@ -53,10 +57,12 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     bool inited = false;
     bool vecInited = false;
 
+    int prevTime = 0;
     bool isVector = false;
 
     double yLow = y + lineHeight - WAVES_GAP;
     double yHalf = y + (yLow - y) / 2;
+    double yPrev = yHalf;
     auxPath.moveTo(0, yLow);
 
     // iterating over time points (events)
@@ -64,6 +70,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
       DumpData dump = timepoint.data;
       int t = timepoint.time;
+
 
       double scenePos = ((t - a) / (double)(b - a)) * width;
       int idx = this->isVector(dump, this->top->vars[i].identifier);
@@ -159,47 +166,29 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         } else {
           idx = this->isScalar(dump, this->top->vars[i].identifier);
           if (idx != -1) {
-
-            if (!inited) {
-              inited = true;
-              // start low if the first bit is 0
-              if (dump.scals[idx].stringValue == "x" ||
-                  dump.scals[idx].stringValue == "X" ||
-                  dump.scals[idx].stringValue == "z" ||
-                  dump.scals[idx].stringValue == "Z") {
-                path.moveTo(0, yHalf);
-              } else if (dump.scals[idx].value == 0) {
-                path.moveTo(0, yLow);
-              } else {
-                path.moveTo(0, y);
-              }
-
-
-              if (prev  == 0 && dump.scals[idx].value == 1) {
-                path.lineTo(scenePos, yLow);
-                path.lineTo(scenePos, y);
-              }
-              if (prev == 1 && dump.scals[idx].value == 0) {
-                path.lineTo(scenePos, y);
-                path.lineTo(scenePos, yLow);
-              }
-              prev = dump.scals[idx].value;
+            // draw an angle depending on state
+            if (prevTime)
+              path.lineTo(scenePos, yPrev);
+            double yNew = 0;
+            if (is_half_state(dump.scals[idx].stringValue)) {
+              yNew = yHalf;
+            } else if (dump.scals[idx].value == 0) {
+              yNew = yLow;
             } else {
-
-              // draw an angle depending on state
-              if (prev == 0 && dump.scals[idx].value == 1) {
-                path.lineTo(scenePos, yLow);
-                path.lineTo(scenePos, y);
-              }
-              if (prev == 1 && dump.scals[idx].value == 0) {
-                path.lineTo(scenePos, y);
-                path.lineTo(scenePos, yLow);
-              }
-              // todo add x and z
-              prev = dump.scals[idx].value;
-              prevString = dump.scals[idx].stringValue;
+              yNew = y;
             }
+            if (!prevTime) {
+              path.moveTo(0, yNew);
+              qDebug() << prevScenePos << scenePos << yPrev << yNew;
+            }
+            path.lineTo(scenePos, yNew);
+            yPrev = yNew;
+
+            // todo add x and z
+            prev = dump.scals[idx].value;
+            prevString = dump.scals[idx].stringValue;
           } else {
+            // assert(0);
             // if (prev == 1) {
             //   path.lineTo(scenePos, y);
             // } else {
@@ -216,30 +205,32 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           prevFloat = dump.vecs[idx].valueVecDecFloat;
         } else {
           idx = this->isScalar(dump, this->top->vars[i].identifier);
+
           if (idx != -1) {
             prev = dump.scals[idx].value;
-            if (prev == 1) {
-              path.moveTo(scenePos, y);
+            prevString = dump.scals[idx].stringValue;
+
+            if (is_half_state(prevString)) {
+              path.moveTo(0, yHalf);
+              yPrev = yHalf;
             } else if (prev == 0) {
-              path.moveTo(scenePos, yLow);
+              path.moveTo(0, yLow);
+              yPrev = yLow;
+            } else {
+              path.moveTo(0, y);
+              yPrev = y;
             }
           }
+
           // qDebug() << "STOP";
         }
       };
       // qDebug() << "INFO" << j << a << b << width.width();
+      prevTime = t;
     }
     // when all the points are done, closing the line
     if (!isVector) {
-
-      if (prev == 1) {
-        // path.moveTo(0, y);
-        path.lineTo(width, y);
-      } else if (prev == 0) {
-        // path.moveTo(0, yLow);
-        path.lineTo(width, yLow);
-      }
-
+      path.lineTo(width, yPrev);
     } else {
       path.lineTo(width, y);
       auxPath.lineTo(width, yLow);

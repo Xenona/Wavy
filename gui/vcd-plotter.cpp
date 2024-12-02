@@ -139,7 +139,7 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
   if (!this->data->timepoints.size()) {
     this->data->warns.push_back("The timing diagram has no time points!");
   } else {
-    this->leftFOVborder = this->data->timepoints[0].time;
+    this->leftFOVborder = 0;
     this->rightFOVborder = this->data->timepoints.back().time;
     this->minleftborder = this->leftFOVborder;
     this->maxrightborder = this->rightFOVborder;
@@ -192,30 +192,23 @@ void VCDPlotter::sideShiftView(int delta) {
   if (delta > 0) {
     if (this->leftFOVborder - delta >= 0) {
       this->leftFOVborder -= delta;
-    } else {
-      this->leftFOVborder = 0;
-    }
-
-    if (this->rightFOVborder - delta >= this->MAX_ZOOM_DELTA) {
       this->rightFOVborder -= delta;
     } else {
+      this->leftFOVborder = 0;
       this->rightFOVborder = this->MAX_ZOOM_DELTA;
     }
+
   } else {
-    // todo
     if (this->leftFOVborder - delta <
         this->data->timepoints.back().time - this->MAX_ZOOM_DELTA) {
       this->leftFOVborder -= delta;
+      this->rightFOVborder -= delta;
     } else {
       this->leftFOVborder =
           this->data->timepoints.back().time - this->MAX_ZOOM_DELTA;
-    }
-
-    if (this->rightFOVborder - delta <= this->data->timepoints.back().time) {
-      this->rightFOVborder -= delta;
-    } else {
       this->rightFOVborder = this->data->timepoints.back().time;
     }
+
   }
 
   this->plotUpdate();
