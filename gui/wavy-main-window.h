@@ -52,9 +52,8 @@ public:
   QVBoxLayout *l_10;
   QScrollArea *waveform_scroll;
   QAction *action_open;
-  QAction *action_save;
 
-  void loadVCDData(std::string path);
+  void loadVCDData(std::string path, VCDData*data=nullptr);
   void setVCDDataActive(QString path);
   QString VCDDataActive();
   void removeActiveVCD();
@@ -64,13 +63,11 @@ public:
 
   QTreeWidget* createTreeWidget(std::vector<ScopeData> data);
   void closeTab(int idx);
+  Ui::WavyMainWindow *ui;
 
 private:
   QMap<QString, GUIVCDInfo> vcdDataFiles;
   VCDParser* parser;
   QString _VCDDataActive;
-
-protected:
-  Ui::WavyMainWindow *ui;
 
 };

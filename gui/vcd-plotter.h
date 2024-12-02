@@ -1,23 +1,40 @@
 #pragma once
 #include "../lib/vcd-parser/vcd-data.h"
-#include "vcd-graphics-view.h"
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QTreeWidget>
 #include <qmap.h>
+#include <qnamespace.h>
 #include <qtmetamacros.h>
 #include <qtreewidget.h>
 
+class VCDGraphicsView;
+class WavyMainWindow;
+
+enum class base {
+  NIL,
+  bin,
+  oct,
+  dec,
+  hex,
+};
+struct WaveState {
+  Qt::GlobalColor color;
+  base base;
+};
 class VCDPlotter : public QWidget {
 
 public:
-  VCDPlotter(QString path, VCDData *data, QWidget *parent);
+  VCDPlotter(QString path, VCDData *data, WavyMainWindow*top, QWidget *parent);
   ~VCDPlotter();
   void wheelEvent(QWheelEvent *event) override;
   QTreeWidget *selected_dumps;
   QList<QTreeWidgetItem *> dumpsList;
   QList<VarData> varsList;
+  QList<WaveState> waveStates;
+  WavyMainWindow*top;
 
+  void setCustomisations(Qt::GlobalColor color, base base);
   void setHeightView(int height);
   void addSelectedDumps(QList<QTreeWidgetItem *> items, QList<VarData> varData);
   void zoomView(int delta);

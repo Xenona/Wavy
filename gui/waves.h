@@ -3,6 +3,7 @@
 #include "vcd-plotter.h"
 #include <QGraphicsObject>
 #include <QWidget>
+#include <qnamespace.h>
 
 class Waves : public QGraphicsObject {
 
@@ -20,5 +21,5 @@ public:
   void addText(double scenePos, double prevScenePos, QPainter *painter,
                double lineHeight, int WAVES_GAP, long long prev,
                long long prevFloat, DumpData dump, int idx, double y,
-               std::string prevString);
+               std::string prevString, long long index, Qt::GlobalColor col = Qt::transparent);
 };

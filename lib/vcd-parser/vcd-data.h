@@ -42,6 +42,9 @@ enum class VarTypes {
   Wire,
   Wor
 };
+
+// todo
+// use this as a pointer in *changedata
 struct VarData {
   VarTypes type;
   int size;

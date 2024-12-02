@@ -99,9 +99,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                 auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow);
                 auxPath.lineTo(scenePos, yHalf);
                 auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow);
-
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, "x");
+                              WAVES_GAP, prev, prevFloat, dump, idx, y, "x", i, Qt::red);
               }
             } else {
               if ((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
@@ -115,7 +114,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                 auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow);
 
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, "");
+                              WAVES_GAP, prev, prevFloat, dump, idx, y, "", i);
 
                 prevScenePos = scenePos;
                 prev = dump.vecs[idx].valueVecDec;
@@ -141,24 +140,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
               double availLen = scenePos - prevScenePos;
 
               // QTextItem
-              painter->save();
-              QFont font = painter->font();
-              font.setPixelSize(lineHeight - WAVES_GAP * 3);
-              painter->setFont(font);
-              QFontMetricsF fm(font);
-              std::string valInt = std::to_string(prev);
-              std::string valFloat = std::to_string(prevFloat);
-
-              QString val = QString::fromStdString(
-                  dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt);
-              double valWidth = fm.horizontalAdvance(val);
-              QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
-              if (valWidth <= availLen) {
-                painter->drawText(rect, Qt::AlignCenter, val);
-              } else {
-                painter->drawText(rect, Qt::AlignCenter, ".");
-              }
-              painter->restore();
+              this->addText(scenePos, prevScenePos, painter, lineHeight,
+                            WAVES_GAP, prev, prevFloat, dump, idx, y, "", i);
 
               prevScenePos = scenePos;
               prev = dump.vecs[idx].valueVecDec;
@@ -250,7 +233,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
       path.lineTo(width, y);
       auxPath.lineTo(width, yLow);
       this->addText(width, prevScenePos, painter, lineHeight, WAVES_GAP, prev,
-                    prevFloat, {}, -1, y, "");
+                    prevFloat, {}, -1, y, "", i);
     }
     painter->drawPath(path);
     painter->drawPath(auxPath);
@@ -282,13 +265,14 @@ int Waves::isVector(DumpData data, std::string id) {
 void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
                     double lineHeight, int WAVES_GAP, long long prev,
                     long long prevFloat, DumpData dump, int idx, double y,
-                    std::string prevString) {
+                    std::string prevString, long long index, Qt::GlobalColor col) {
   double availLen = scenePos - prevScenePos;
 
   // QTextItem
   painter->save();
   QFont font = painter->font();
   font.setPixelSize(lineHeight - WAVES_GAP * 3);
+
   painter->setFont(font);
   QFontMetricsF fm(font);
   std::string valInt = std::to_string(prev);
@@ -303,6 +287,14 @@ void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
           : QString::fromStdString(prev == 0 ? valFloat : valInt);
   double valWidth = fm.horizontalAdvance(val);
   QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
+  
+  if (col == Qt::transparent) {
+    // todo
+    // painter->setPen(this->top->waveStates[index].color);
+  } else {
+    // painter->setPen(col);
+  }
+  
   if (valWidth <= availLen) {
     painter->drawText(rect, Qt::AlignCenter, val);
   } else {

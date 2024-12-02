@@ -199,25 +199,44 @@
      <string>File...</string>
     </property>
     <addaction name="action_open"/>
-    <addaction name="action_save"/>
+    <addaction name="actionCapture_device"/>
+   </widget>
+   <widget class="QMenu" name="menuSelected_dump">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>Selected dump(s)...</string>
+    </property>
+    <widget class="QMenu" name="menuChange_color">
+     <property name="title">
+      <string>Change color...</string>
+     </property>
+     <addaction name="actionRed"/>
+     <addaction name="actionYellow"/>
+     <addaction name="actionOrang"/>
+     <addaction name="actionGreen"/>
+     <addaction name="actionLight_blue"/>
+     <addaction name="actionBlue"/>
+     <addaction name="actionPurple"/>
+     <addaction name="actionMagenta"/>
+     <addaction name="actionWhite"/>
+    </widget>
+    <widget class="QMenu" name="menuChange_radix">
+     <property name="title">
+      <string>Change radix...</string>
+     </property>
+     <addaction name="actionBinary"/>
+     <addaction name="actionOctal"/>
+     <addaction name="actionDecimal"/>
+     <addaction name="actionHexadecimal"/>
+    </widget>
+    <addaction name="menuChange_color"/>
+    <addaction name="menuChange_radix"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSelected_dump"/>
   </widget>
-  <action name="action_open">
-   <property name="icon">
-    <iconset theme="save">
-     <normaloff>../../../../../../../../../../../../../../../../../../.designer/backup</normaloff>../../../../../../../../../../../../../../../../../../.designer/backup</iconset>
-   </property>
-   <property name="text">
-    <string>Open...</string>
-   </property>
-   <property name="toolTip">
-    <string>Open VCD file</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
   <action name="action_save">
    <property name="icon">
     <iconset theme="save">
@@ -231,6 +250,92 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionRed">
+   <property name="text">
+    <string>Red</string>
+   </property>
+  </action>
+  <action name="actionYellow">
+   <property name="text">
+    <string>Yellow</string>
+   </property>
+  </action>
+  <action name="actionOrang">
+   <property name="text">
+    <string>Orange</string>
+   </property>
+  </action>
+  <action name="actionGreen">
+   <property name="text">
+    <string>Green</string>
+   </property>
+  </action>
+  <action name="actionLight_blue">
+   <property name="text">
+    <string>Light blue</string>
+   </property>
+  </action>
+  <action name="actionBlue">
+   <property name="text">
+    <string>Blue</string>
+   </property>
+  </action>
+  <action name="actionPurple">
+   <property name="text">
+    <string>Purple</string>
+   </property>
+  </action>
+  <action name="actionMagenta">
+   <property name="text">
+    <string>Magenta</string>
+   </property>
+  </action>
+  <action name="actionWhite">
+   <property name="text">
+    <string>White</string>
+   </property>
+  </action>
+  <action name="actionBinary">
+   <property name="text">
+    <string>Binary</string>
+   </property>
+  </action>
+  <action name="actionOctal">
+   <property name="text">
+    <string>Octal</string>
+   </property>
+  </action>
+  <action name="actionDecimal">
+   <property name="text">
+    <string>Decimal</string>
+   </property>
+  </action>
+  <action name="actionHexadecimal">
+   <property name="text">
+    <string>Hexadecimal</string>
+   </property>
+  </action>
+  <action name="actionOpen_file">
+   <property name="text">
+    <string>Open file...</string>
+   </property>
+  </action>
+  <action name="actionCapture_device">
+   <property name="text">
+    <string>Capture device</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="action_open">
+   <property name="text">
+    <string>Open file...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>

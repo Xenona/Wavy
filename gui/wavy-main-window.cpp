@@ -3,6 +3,7 @@
 #include "../lib/vcd-parser/vcd-token-stream.h"
 #include "info-table-widget.h"
 #include "scope-tree-widget.h"
+#include "ui_capture_device_dialog.h"
 #include "ui_wavy-main-window.h"
 #include "vcd-plotter.h"
 #include <QFileDialog>
@@ -29,6 +30,9 @@
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <string>
+#include "capture_device_dialog.h"
+#include <fcntl.h>
+
 
 WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->ui->setupUi(this);
@@ -40,12 +44,11 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->l_9 = ui->l_9;
   this->l_10 = ui->l_10;
   this->action_open = ui->action_open;
-  this->action_save = ui->action_save;
 
   this->parser = new VCDParser();
   qApp->installEventFilter(this);
 
-  QObject::connect(ui->action_open, &QAction::triggered, this, [this]() {
+  QObject::connect(this->action_open, &QAction::triggered, this, [this]() {
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Open VCD file"), "", tr("VCD files (*.vcd);;All Files (*)"));
     if (filename.isEmpty())
@@ -69,6 +72,29 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
 
   QObject::connect(this->waveform_tabs, &QTabWidget::tabCloseRequested, this,
                    &WavyMainWindow::closeTab);
+
+
+  QObject::connect(this->ui->actionCapture_device, &QAction::triggered, this, [this]() {
+    
+    int fd = open("/dev/pikernely0", O_RDWR);
+    if (fd < 0) {
+      QMessageBox msgBox;
+      msgBox.setText("Could not open device. Did you load a module?");
+      msgBox.exec();
+      return;
+    }
+    
+    auto d = new CaprureDeviceDialog(fd, this);
+    // a->setupUi(d);
+    if (d->exec() != QDialog::Rejected) {
+
+    std::string name = "Pico";
+    this->loadVCDData(name, d->data);
+    }
+    // if d->e();
+
+    
+  });
 }
 
 void WavyMainWindow::addSelectedDumps() {
@@ -112,6 +138,11 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
                         this->vcdDataFiles.value(_VCDDataActive)
                             .tab->varsList.begin() +
                         j);
+                this->vcdDataFiles.value(_VCDDataActive)
+                    .tab->waveStates.erase(
+                        this->vcdDataFiles.value(_VCDDataActive)
+                            .tab->waveStates.begin() +
+                        j);
                 break;
               } else {
                 j++;
@@ -144,13 +175,18 @@ void WavyMainWindow::closeTab(int idx) {
   this->removeActiveVCD();
 };
 
-void WavyMainWindow::loadVCDData(std::string path) {
+void WavyMainWindow::loadVCDData(std::string path, VCDData*data) {
   // load data
   VCDData *VCDData;
 
   try {
+    if (data==nullptr) {
+
     VCDData =
         this->parser->getVCDData(new VCDTokenStream(new VCDCharStream(path)));
+    } else {
+      VCDData=data;
+    }
 
     if (VCDData->errors.size()) {
       QMessageBox msgBox;
@@ -180,7 +216,7 @@ void WavyMainWindow::loadVCDData(std::string path) {
 
   if (!this->vcdDataFiles.contains(qstring_path)) {
     // creating tab
-    VCDPlotter *tab = new VCDPlotter(qstring_path, VCDData, this);
+    VCDPlotter *tab = new VCDPlotter(qstring_path, VCDData, this, this);
     this->waveform_tabs->addTab(tab,
                                 QString::fromStdString(path).split("/").last());
 

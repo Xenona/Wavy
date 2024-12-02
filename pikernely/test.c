@@ -38,7 +38,7 @@ static void *run(void *arg) {
       if(pkt.data[i] != prev) {
         uint64_t time = pkt.time_start + i * pkt.time_duration / (PICOY_BODY - 1);
         printf("[%ldus](+ %ldus) =%x\n", time, time-prev_time, pkt.data[i]);
-        prev_time = time;
+        prev_time =
         prev = pkt.data[i];
         
       }

@@ -18,6 +18,7 @@ qt_add_executable(wavy_gui
   gui/vcd-graphics-view.cpp
   gui/waves.cpp
   gui/info-table-widget.cpp
+  gui/capture_device_dialog.cpp
 )
 
 

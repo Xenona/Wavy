@@ -1,6 +1,9 @@
 #include "vcd-plotter.h"
+#include "ui_capture_device_dialog.h"
+#include "ui_wavy-main-window.h"
 #include "vcd-graphics-view.h"
 #include "waves.h"
+#include "wavy-main-window.h"
 #include <QGraphicsScene>
 #include <QHeaderView>
 #include <QPainterPath>
@@ -28,11 +31,10 @@
 #include <qwidget.h>
 #include <sched.h>
 
-// todo
-// add enter to add selected dumps
 
-VCDPlotter::VCDPlotter(QString path, VCDData *data, QWidget *parent)
-    : QWidget(parent), path(path)
+VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
+                       QWidget *parent)
+    : QWidget(parent), path(path), top(top)
 
 {
   this->data = data;
@@ -61,8 +63,9 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, QWidget *parent)
   verticalLayout_2->setSpacing(0);
   verticalLayout_2->setContentsMargins(0, 0, 0, 0);
 
-  this->view = new VCDGraphicsView(this, this->varsList, this->dumpsList,
-                                   this->data, verticalLayoutWidget);
+  this->view =
+      new VCDGraphicsView(this, this->varsList, this->dumpsList, this->data,
+                          this->waveStates, verticalLayoutWidget);
 
   verticalLayout_2->addWidget(this->view);
   this->horizScroll = new QScrollBar(verticalLayoutWidget);
@@ -90,6 +93,49 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, QWidget *parent)
         }
       });
 
+  QObject::connect(this->top->ui->actionRed, &QAction::triggered, this,
+                   [this]() { this->setCustomisations(Qt::red, base::NIL); });
+  QObject::connect(
+      this->top->ui->actionYellow, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::yellow, base::NIL); });
+  QObject::connect(
+      this->top->ui->actionOrang, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::darkYellow, base::NIL); });
+  QObject::connect(this->top->ui->actionGreen, &QAction::triggered, this,
+                   [this]() { this->setCustomisations(Qt::green, base::NIL); });
+  QObject::connect(this->top->ui->actionLight_blue, &QAction::triggered, this,
+                   [this]() { this->setCustomisations(Qt::cyan, base::NIL); });
+  QObject::connect(this->top->ui->actionBlue, &QAction::triggered, this,
+                   [this]() { this->setCustomisations(Qt::blue, base::NIL); });
+  QObject::connect(
+      this->top->ui->actionPurple, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::darkMagenta, base::NIL); });
+  QObject::connect(
+      this->top->ui->actionMagenta, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::magenta, base::NIL); });
+  QObject::connect(this->top->ui->actionWhite, &QAction::triggered, this,
+                   [this]() { this->setCustomisations(Qt::white, base::NIL); });
+  QObject::connect(
+      this->top->ui->actionBinary, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::transparent, base::bin); });
+  QObject::connect(
+      this->top->ui->actionOctal, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::transparent, base::oct); });
+  QObject::connect(
+      this->top->ui->actionDecimal, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::transparent, base::dec); });
+  QObject::connect(
+      this->top->ui->actionHexadecimal, &QAction::triggered, this,
+      [this]() { this->setCustomisations(Qt::transparent, base::hex); });
+
+  QObject::connect(this->selected_dumps, &QTreeWidget::itemSelectionChanged,
+                   this, [this]() {
+                     QList<QTreeWidgetItem *> selectedElements =
+                         this->selected_dumps->selectedItems();
+                     this->top->ui->menuSelected_dump->setDisabled(
+                         selectedElements.size() == 0);
+                   });
+
   if (!this->data->timepoints.size()) {
     this->data->warns.push_back("The timing diagram has no time points!");
   } else {
@@ -109,9 +155,27 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, QWidget *parent)
   qDebug() << this->view->sceneRect();
   this->view->centerOn(0, 0);
   this->plotUpdate();
- 
-
 }
+
+void VCDPlotter::setCustomisations(Qt::GlobalColor color, base base) {
+  auto selected = this->selected_dumps->selectedItems();
+  auto all = this->dumpsList;
+  for (int i = 0; i < all.size(); i++) {
+    for (int j = i; j < selected.size(); j++) {
+
+      if (all[i] == selected[j]) {
+        if (base != base::NIL) {
+
+          this->waveStates[i].base = base;
+        }
+        if (color != Qt::transparent) {
+
+          this->waveStates[i].color = color;
+        }
+      }
+    }
+  }
+};
 
 VCDPlotter::~VCDPlotter() {
   for (int i = 0; i < this->dumpsList.size(); i++) {
@@ -193,6 +257,10 @@ void VCDPlotter::addSelectedDumps(QList<QTreeWidgetItem *> items,
   this->selected_dumps->addTopLevelItems(items);
   this->dumpsList.append(items);
   this->varsList.append(varData);
+  for (int i = 0; i < items.size(); i++) {
+
+    this->waveStates.append({Qt::green, base::dec});
+  }
   this->plotUpdate();
 }
 
@@ -213,7 +281,7 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   } else if (alt && ctrl) {
     qDebug() << "alt+ctrl";
 
-    this->zoomView(event->angleDelta().x() > 0 ? 10 : -10);
+    this->zoomView(event->angleDelta().x() > 0 ? 10000 : -10000);
   } else if (alt) {
     qDebug() << "alt";
 

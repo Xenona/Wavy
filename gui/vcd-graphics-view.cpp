@@ -11,10 +11,10 @@
 
 
 VCDGraphicsView::VCDGraphicsView(VCDPlotter*top, QList<VarData> &vars,
-                                 QList<QTreeWidgetItem *> &list, VCDData *data,
+                                 QList<QTreeWidgetItem *> &list, VCDData *data, QList<WaveState> &waveStates,
                                  QWidget *parent)
     : QGraphicsView(parent), data(data), list(list), vars(vars),
-      scene(new QGraphicsScene(this)), waves(new Waves(this)), top(top) {
+      scene(new QGraphicsScene(this)), waves(new Waves(this)), top(top), waveStates(waveStates) {
   this->setResizeAnchor(NoAnchor);
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
