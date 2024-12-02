@@ -11,12 +11,14 @@ class Path {
   void lineTo(float x, float y, Qt::GlobalColor color = Qt::green);
 
   void moveTo(float x, float y);
+  Qt::GlobalColor color = Qt::green;
 private:
   QPainterPath* main;
   QPainterPath* x;
   QPainterPath* z;
+  QPainterPath* partial;
+  QPainterPath* test;
 
-  Qt::GlobalColor color = Qt::green;
 
 
 };

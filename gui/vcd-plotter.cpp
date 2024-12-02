@@ -31,7 +31,6 @@
 #include <qwidget.h>
 #include <sched.h>
 
-
 VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
                        QWidget *parent)
     : QWidget(parent), path(path), top(top)
@@ -194,8 +193,11 @@ void VCDPlotter::sideShiftView(int delta) {
       this->leftFOVborder -= delta;
       this->rightFOVborder -= delta;
     } else {
+      if (this->leftFOVborder!=0) {
+
       this->leftFOVborder = 0;
-      this->rightFOVborder = this->MAX_ZOOM_DELTA;
+      this->rightFOVborder -=delta;
+      } 
     }
 
   } else {
@@ -208,7 +210,6 @@ void VCDPlotter::sideShiftView(int delta) {
           this->data->timepoints.back().time - this->MAX_ZOOM_DELTA;
       this->rightFOVborder = this->data->timepoints.back().time;
     }
-
   }
 
   this->plotUpdate();
@@ -274,11 +275,16 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   } else if (alt && ctrl) {
     qDebug() << "alt+ctrl";
 
-    this->zoomView(event->angleDelta().x() > 0 ? (this->rightFOVborder-this->leftFOVborder)*0.1 : -(this->rightFOVborder-this->leftFOVborder)*0.1);
+    this->zoomView(event->angleDelta().x() > 0
+                       ? (this->rightFOVborder - this->leftFOVborder) * 0.1
+                       : -(this->rightFOVborder - this->leftFOVborder) * 0.1);
   } else if (alt) {
     qDebug() << "alt";
 
-    this->sideShiftView(event->angleDelta().x() > 0 ? (this->rightFOVborder-this->leftFOVborder)*0.1 : -(this->rightFOVborder-this->leftFOVborder)*0.1);
+    this->sideShiftView(event->angleDelta().x() > 0
+                            ? (this->rightFOVborder - this->leftFOVborder) * 0.1
+                            : -(this->rightFOVborder - this->leftFOVborder) *
+                                  0.1);
   } else if (shift) {
     qDebug() << "shift";
     this->sideShiftView(event->angleDelta().y() > 0 ? 1 : -1);

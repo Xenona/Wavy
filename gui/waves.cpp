@@ -15,6 +15,46 @@
 bool is_half_state(std::string &v) {
   return v == "x" || v == "X" || v == "z" || v == "Z";
 }
+bool is_x_state(std::string &v) { return v == "x" || v == "X"; }
+bool is_z_state(std::string &v) { return v == "z" || v == "Z"; }
+bool is_partial_state(std::string &v) {
+  for (int i = 0; i < v.size(); i++) {
+    if (v[i] != '0' && v[i] != '1') {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto color(std::string &v) {
+  if (is_x_state(v)) {
+    return Qt::red;
+
+  } else if (is_z_state(v)) {
+    return Qt::blue;
+
+  } else if (is_partial_state(v)) {
+    return Qt::yellow;
+
+  } else {
+    return Qt::green;
+  }
+}
+
+auto letter(std::string &v) {
+  std::string s = "x";
+  if (is_x_state(v)) {
+    return s;
+  }
+  if (is_z_state(v)) {
+    return std::string{"z"};
+  }
+  if (is_partial_state(v)) {
+
+    return std::string{"?"};
+  }
+  return std::string{"?"};
+}
 
 Waves::Waves(VCDGraphicsView *top)
     : top(top) {
@@ -56,6 +96,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     double prevFloat = INFINITY;
     long long prev = 0;
     std::string prevString;
+    std::string otherPrevString;
     bool inited = false;
     bool vecInited = false;
 
@@ -84,100 +125,111 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           // todo
           // vector drawing
           isVector = true;
+          auto c = color(dump.vecs[idx].valueVec);
           if (!inited) {
             if (prevFloat == INFINITY) {
               prevFloat = dump.vecs[idx].valueVecDecFloat;
               prev = dump.vecs[idx].valueVecDec;
-              prevString = dump.vecs[idx].valueVec;
+              otherPrevString = dump.vecs[idx].valueVec;
               inited = true;
               if (t == 0) {
 
                 path.moveTo(0, yHalf);
-                path.lineTo(HEXAGONS_STEP, y, Qt::red);
+                path.lineTo(HEXAGONS_STEP, y, c);
                 auxPath.moveTo(0, yHalf);
-                auxPath.lineTo(HEXAGONS_STEP, yLow, Qt::red);
+                auxPath.lineTo(HEXAGONS_STEP, yLow, c);
               } else {
 
                 path.moveTo(0, yHalf);
-                path.lineTo(HEXAGONS_STEP, y, Qt::red);
-                path.lineTo(scenePos - HEXAGONS_STEP, y, Qt::red);
-                path.lineTo(scenePos, yHalf, Qt::red);
-                path.lineTo(scenePos + HEXAGONS_STEP, y, Qt::red);
+                path.lineTo(HEXAGONS_STEP, y, c);
+                path.lineTo(scenePos - HEXAGONS_STEP, y, c);
+                path.lineTo(scenePos, yHalf, c);
+
+                // path.lineTo(scenePos + HEXAGONS_STEP, y, c);
 
                 auxPath.moveTo(0, yHalf);
-                auxPath.lineTo(HEXAGONS_STEP, yLow, Qt::red);
-                auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, Qt::red);
-                auxPath.lineTo(scenePos, yHalf, Qt::red);
-                auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow, Qt::red);
+                auxPath.lineTo(HEXAGONS_STEP, yLow, c);
+                auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, c);
+                auxPath.lineTo(scenePos, yHalf, c);
+
+                // if (is_x_state(dump.vecs[idx].valueVec)) {
+                //   auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow, Qt::yellow);
+
+                // } else if (is_z_state(dump.vecs[idx].valueVec)) {
+                //   auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow, Qt::blue);
+
+                // } else if (is_partial_state(dump.vecs[idx].valueVec)) {
+                //   auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow, Qt::yellow);
+
+                // } else {
+                //   auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow);
+                // }
+
+                std::string s = letter(dump.vecs[idx].valueVec);
+
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, "x", i,
+                              WAVES_GAP, prev, prevFloat, dump, idx, y, s, i,
                               Qt::red);
+                prevScenePos = scenePos;
               }
             } else {
-              if ((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
-                  (prev != dump.vecs[idx].valueVecDec)) {
+              if (((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
+                   (prev != dump.vecs[idx].valueVecDec)) &&
+                  (otherPrevString != dump.vecs[idx].valueVec)) {
+                auto c = color(dump.vecs[idx].valueVec);
 
-                auto col = Qt::green;
-                if (prevString == "X" || prevString == "x")
-                  col = Qt::red;
-                if (prevString == "Z" || prevString == "z")
-                  col = Qt::red;
-                path.lineTo(scenePos - HEXAGONS_STEP, y, col);
-                path.lineTo(scenePos, yHalf, col);
-                path.lineTo(scenePos + HEXAGONS_STEP, y, col);
+                path.lineTo(prevScenePos + HEXAGONS_STEP, y, c);
+                path.lineTo(scenePos - HEXAGONS_STEP, y, c);
+                path.lineTo(scenePos, yHalf, c);
 
-                auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, col);
-                auxPath.lineTo(scenePos, yHalf, col);
-                auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow, col);
+                auxPath.lineTo(prevScenePos + HEXAGONS_STEP, yLow, c);
+                auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, c);
+                auxPath.lineTo(scenePos, yHalf, c);
 
+                std::string s = letter(prevString);
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, "", i,
-                              col);
+                              WAVES_GAP, prev, prevFloat, dump, idx, y, s, i);
 
                 prevScenePos = scenePos;
                 prev = dump.vecs[idx].valueVecDec;
                 prevFloat = dump.vecs[idx].valueVecDecFloat;
-                prevString = dump.vecs[idx].valueVec;
+                otherPrevString = dump.vecs[idx].valueVec;
               }
             }
 
             double availLen = scenePos - prevScenePos;
 
-            prevScenePos = scenePos;
-
           } else {
-            if ((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
-                (prev != dump.vecs[idx].valueVecDec)) {
-              auto col = Qt::green;
-              if (prevString == "X" || prevString == "x")
-                col = Qt::red;
-              if (prevString == "Z" || prevString == "z")
-                col = Qt::red;
+            if (((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
+                 (prev != dump.vecs[idx].valueVecDec)) &&
+                (otherPrevString != dump.vecs[idx].valueVec)) {
 
-              path.lineTo(scenePos - HEXAGONS_STEP, y, col);
-              path.lineTo(scenePos, yHalf, col);
-              path.lineTo(scenePos + HEXAGONS_STEP, y, col);
+              // c = color(prevString);
+              path.lineTo(prevScenePos + HEXAGONS_STEP, y, c);
+              path.lineTo(scenePos - HEXAGONS_STEP, y, c);
+              path.lineTo(scenePos, yHalf, c);
 
-              auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, col);
-              auxPath.lineTo(scenePos, yHalf, col);
-              auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow, col);
+              auxPath.lineTo(prevScenePos + HEXAGONS_STEP, yLow, c);
+              auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, c);
+              auxPath.lineTo(scenePos, yHalf, c);
 
               double availLen = scenePos - prevScenePos;
 
               // QTextItem
+
+              std::string s = letter(prevString);
               this->addText(scenePos, prevScenePos, painter, lineHeight,
-                            WAVES_GAP, prev, prevFloat, dump, idx, y, "", i,
-                            col);
+                            WAVES_GAP, prev, prevFloat, dump, idx, y, s, i, c);
 
               prevScenePos = scenePos;
               prev = dump.vecs[idx].valueVecDec;
               prevFloat = dump.vecs[idx].valueVecDecFloat;
-              prevString = dump.vecs[idx].valueVec;
+              otherPrevString = dump.vecs[idx].valueVec;
 
             } else {
               // path.lineTo(scenePos);
-              path.lineTo(scenePos - HEXAGONS_STEP, y);
-              auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow);
+              // path.lineTo(scenePos, y);
+              // auxPath.lineTo(scenePos, yLow);
             }
           }
 
@@ -185,14 +237,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           idx = this->isScalar(dump, this->top->vars[i].identifier);
           if (idx != -1) {
             // draw an angle depending on state
-            auto col = Qt::magenta;
-            if (prevTime) {
-              if (prevString == "X" || prevString == "x")
-                col = Qt::red;
-              if (prevString == "Z" || prevString == "z")
-                col = Qt::red;
-              path.lineTo(scenePos, yPrev, col);
-            }
+            if (prevTime)
+              path.lineTo(scenePos, yPrev);
             double yNew = 0;
             if (is_half_state(dump.scals[idx].stringValue)) {
               yNew = yHalf;
@@ -203,14 +249,15 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
             }
             if (!prevTime) {
               path.moveTo(0, yNew);
-              qDebug() << prevScenePos << scenePos << yPrev << yNew;
             }
-            path.lineTo(scenePos, yNew, col);
+            path.lineTo(scenePos, yNew);
             yPrev = yNew;
 
             // todo add x and z
             prev = dump.scals[idx].value;
             prevString = dump.scals[idx].stringValue;
+            otherPrevString = dump.scals[idx].stringValue;
+
           } else {
           }
         }
@@ -221,13 +268,15 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         if (isVector && idx != -1) {
           prev = dump.vecs[idx].valueVecDec;
           prevFloat = dump.vecs[idx].valueVecDecFloat;
-          prevString = dump.vecs[idx].valueVec;
+          otherPrevString = dump.vecs[idx].valueVec;
+
         } else {
           idx = this->isScalar(dump, this->top->vars[i].identifier);
 
           if (idx != -1) {
             prev = dump.scals[idx].value;
             prevString = dump.scals[idx].stringValue;
+            otherPrevString = dump.scals[idx].stringValue;
 
             if (is_half_state(prevString)) {
               path.moveTo(0, yHalf);
@@ -244,18 +293,25 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
       };
       prevTime = t;
     }
-    auto col = Qt::green;
-    if (prevString == "X" || prevString == "x")
-      col = Qt::red;
-    if (prevString == "Z" || prevString == "z")
-      col = Qt::red;
     if (!isVector) {
-      path.lineTo(width, yPrev, col);
+      path.lineTo(width, yPrev);
     } else {
-      path.lineTo(width, y, col);
-      auxPath.lineTo(width, yLow, col);
-      this->addText(width, prevScenePos, painter, lineHeight, WAVES_GAP, prev,
-                    prevFloat, {}, -1, y, "", i);
+      auto c = color(prevString);
+
+      path.lineTo(prevScenePos + HEXAGONS_STEP, y, c);
+      path.lineTo(width, y);
+      auxPath.lineTo(prevScenePos + HEXAGONS_STEP, yLow, c);
+      auxPath.lineTo(width, yLow);
+      std::string s = letter(otherPrevString);
+
+      if (!inited) {
+
+        this->addText(width, prevScenePos, painter, lineHeight, WAVES_GAP, prev,
+                      prevFloat, {}, -1, y, s, i);
+      } else {
+        this->addText(width, prevScenePos, painter, lineHeight, WAVES_GAP, prev,
+                      prevFloat, {}, -1, y, s, i);
+      }
     }
     path.drawPath(painter);
     auxPath.drawPath(painter);
@@ -301,13 +357,19 @@ void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
   std::string valInt = std::to_string(prev);
   std::string valFloat = std::to_string(prevFloat);
 
-  QString val =
+  QString val;
+  if (prevString == "") {
+
+  val =
       idx != -1
           ? QString::fromStdString(
                 prevString == ""
                     ? (dump.vecs[idx].valueVecDec == 0 ? valFloat : valInt)
                     : prevString)
           : QString::fromStdString(prev == 0 ? valFloat : valInt);
+  } else {
+    val = QString::fromStdString(prevString);
+  }
   double valWidth = fm.horizontalAdvance(val);
   QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
 
@@ -315,7 +377,7 @@ void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
     // todo
     // painter->setPen(this->top->waveStates[index].color);
   } else {
-    // painter->setPen(col);
+    painter->setPen(col);
   }
 
   if (valWidth <= availLen) {
