@@ -49,6 +49,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
     double prevFloat = INFINITY;
     long long prev = 0;
+    std::string prevString;
     bool inited = false;
     bool vecInited = false;
 
@@ -100,7 +101,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                 auxPath.lineTo(scenePos, yHalf);
                 auxPath.lineTo(scenePos + HEXAGONS_STEP, yLow);
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y, "x", i, Qt::red);
+                              WAVES_GAP, prev, prevFloat, dump, idx, y, "x", i,
+                              Qt::red);
               }
             } else {
               if ((prevFloat != dump.vecs[idx].valueVecDecFloat) ||
@@ -161,11 +163,19 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
             if (!inited) {
               inited = true;
               // start low if the first bit is 0
-              if (prev == 0) {
+              if (dump.scals[idx].stringValue == "x" ||
+                  dump.scals[idx].stringValue == "X" ||
+                  dump.scals[idx].stringValue == "z" ||
+                  dump.scals[idx].stringValue == "Z") {
+                path.moveTo(0, yHalf);
+              } else if (dump.scals[idx].value == 0) {
                 path.moveTo(0, yLow);
+              } else {
+                path.moveTo(0, y);
               }
 
-              if (prev == 0 && dump.scals[idx].value == 1) {
+
+              if (prev  == 0 && dump.scals[idx].value == 1) {
                 path.lineTo(scenePos, yLow);
                 path.lineTo(scenePos, y);
               }
@@ -187,6 +197,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
               }
               // todo add x and z
               prev = dump.scals[idx].value;
+              prevString = dump.scals[idx].stringValue;
             }
           } else {
             // if (prev == 1) {
@@ -265,7 +276,8 @@ int Waves::isVector(DumpData data, std::string id) {
 void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
                     double lineHeight, int WAVES_GAP, long long prev,
                     long long prevFloat, DumpData dump, int idx, double y,
-                    std::string prevString, long long index, Qt::GlobalColor col) {
+                    std::string prevString, long long index,
+                    Qt::GlobalColor col) {
   double availLen = scenePos - prevScenePos;
 
   // QTextItem
@@ -287,14 +299,14 @@ void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
           : QString::fromStdString(prev == 0 ? valFloat : valInt);
   double valWidth = fm.horizontalAdvance(val);
   QRectF rect = {prevScenePos, y, availLen, lineHeight - WAVES_GAP};
-  
+
   if (col == Qt::transparent) {
     // todo
     // painter->setPen(this->top->waveStates[index].color);
   } else {
     // painter->setPen(col);
   }
-  
+
   if (valWidth <= availLen) {
     painter->drawText(rect, Qt::AlignCenter, val);
   } else {

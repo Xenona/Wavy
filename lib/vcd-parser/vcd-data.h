@@ -71,6 +71,7 @@ struct VectorValueChangeData {
 
 struct ScalarValueChangeData {
   int value;
+  std::string stringValue;
   std::string identifier;
 };
 

@@ -281,11 +281,11 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   } else if (alt && ctrl) {
     qDebug() << "alt+ctrl";
 
-    this->zoomView(event->angleDelta().x() > 0 ? 10000 : -10000);
+    this->zoomView(event->angleDelta().x() > 0 ? (this->rightFOVborder-this->leftFOVborder)*0.1 : -(this->rightFOVborder-this->leftFOVborder)*0.1);
   } else if (alt) {
     qDebug() << "alt";
 
-    this->sideShiftView(event->angleDelta().x() > 0 ? 10 : -10);
+    this->sideShiftView(event->angleDelta().x() > 0 ? (this->rightFOVborder-this->leftFOVborder)*0.1 : -(this->rightFOVborder-this->leftFOVborder)*0.1);
   } else if (shift) {
     qDebug() << "shift";
     this->sideShiftView(event->angleDelta().y() > 0 ? 1 : -1);

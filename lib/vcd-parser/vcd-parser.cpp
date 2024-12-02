@@ -73,10 +73,12 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
         try {
           time = std::stoll(token.value);
         } catch (const std::exception &e) {
-          this->error("Simulation time contains wrong characters. Cannot "
-                      "interpret as long long integer: " +
-                          token.value + ". Now assuming zero, which may lead to further errors.",
-                      vcd);
+          this->error(
+              "Simulation time contains wrong characters. Cannot "
+              "interpret as long long integer: " +
+                  token.value +
+                  ". Now assuming zero, which may lead to further errors.",
+              vcd);
           time = 0;
         }
         if (prevTime >= time) {
@@ -99,6 +101,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       case (TokenType::ScalarValueChange): {
         vcd->timepoints.back().data.scals.push_back(
             {.value = token.value[0] - '0',
+             .stringValue = std::string{token.value[0]},
              .identifier = token.value.substr(1)});
         break;
       }
@@ -334,6 +337,7 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       if (token.type == TokenType::ScalarValueChange) {
         vcd->timepoints.back().data.scals.push_back(
             {.value = token.value[0] - '0',
+             .stringValue = std::string{token.value[0]},
              .identifier = token.value.substr(1)});
       } else if (token.type == TokenType::VectorValueChange) {
         double f = 0;
