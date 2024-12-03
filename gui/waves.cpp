@@ -112,7 +112,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     QString label = QString::number(i, 'i', (b - a > 100) ? 0 : 2);
 
     QFont font = painter->font();
-    font.setPixelSize(lineHeight - WAVES_GAP*4);
+    font.setPixelSize(-(lineHeight - WAVES_GAP*4));
     painter->setFont(font);
     QFontMetricsF fm(font);
     double valWidth = fm.horizontalAdvance(label);

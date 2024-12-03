@@ -206,14 +206,16 @@ void VCDPlotter::sideShiftView(int delta) {
     }
 
   } else {
+    if (this->rightFOVborder == this->data->timepoints.back().time) {
+      return;
+    }
     if (this->leftFOVborder - delta <
         this->data->timepoints.back().time - this->MAX_ZOOM_DELTA) {
       this->leftFOVborder -= delta;
       this->rightFOVborder -= delta;
     } else {
-      this->leftFOVborder =
-          this->data->timepoints.back().time - this->MAX_ZOOM_DELTA;
-      this->rightFOVborder = this->data->timepoints.back().time;
+        this->leftFOVborder -=delta;
+        this->rightFOVborder = this->data->timepoints.back().time;
     }
   }
 
