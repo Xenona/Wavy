@@ -214,8 +214,8 @@ void VCDPlotter::sideShiftView(int delta) {
       this->leftFOVborder -= delta;
       this->rightFOVborder -= delta;
     } else {
-        this->leftFOVborder -=delta;
-        this->rightFOVborder = this->data->timepoints.back().time;
+      this->leftFOVborder -= delta;
+      this->rightFOVborder = this->data->timepoints.back().time;
     }
   }
 
@@ -313,3 +313,4 @@ void VCDPlotter::plotUpdate() {
                                 (this->rightFOVborder - this->leftFOVborder));
   this->horizScroll->setSliderPosition(this->leftFOVborder);
 };
+ 

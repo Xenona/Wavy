@@ -25,14 +25,15 @@ struct WaveState {
 class VCDPlotter : public QWidget {
 
 public:
-  VCDPlotter(QString path, VCDData *data, WavyMainWindow*top, QWidget *parent);
+  VCDPlotter(QString path, VCDData *data, WavyMainWindow *top, QWidget *parent);
   ~VCDPlotter();
   void wheelEvent(QWheelEvent *event) override;
+
   QTreeWidget *selected_dumps;
   QList<QTreeWidgetItem *> dumpsList;
   QList<VarData> varsList;
   QList<WaveState> waveStates;
-  WavyMainWindow*top;
+  WavyMainWindow *top;
 
   void setCustomisations(Qt::GlobalColor color, base base);
   void setHeightView(int height);
@@ -51,11 +52,12 @@ public:
   long long currentHeight = 0;
 
   QString path;
+  VCDGraphicsView *view;
+
 private:
   int MAX_ZOOM_DELTA = 20;
 
   VCDData *data;
-  VCDGraphicsView *view;
   QScrollBar *horizScroll;
   QScrollBar *vertScroll;
 };

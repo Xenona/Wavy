@@ -1,6 +1,7 @@
 #include "wavy-main-window.h"
 #include "../lib/vcd-parser/vcd-char-stream.h"
 #include "../lib/vcd-parser/vcd-token-stream.h"
+#include "capture_device_dialog.h"
 #include "info-table-widget.h"
 #include "scope-tree-widget.h"
 #include "ui_capture_device_dialog.h"
@@ -13,6 +14,7 @@
 #include <QSizePolicy>
 #include <cstddef>
 #include <exception>
+#include <fcntl.h>
 #include <qabstractitemmodel.h>
 #include <qabstractscrollarea.h>
 #include <qaction.h>
@@ -30,9 +32,6 @@
 #include <qtreewidget.h>
 #include <qwidget.h>
 #include <string>
-#include "capture_device_dialog.h"
-#include <fcntl.h>
-
 
 WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->ui->setupUi(this);
@@ -73,28 +72,25 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   QObject::connect(this->waveform_tabs, &QTabWidget::tabCloseRequested, this,
                    &WavyMainWindow::closeTab);
 
+  QObject::connect(
+      this->ui->actionCapture_device, &QAction::triggered, this, [this]() {
+        int fd = open("/dev/pikernely0", O_RDWR);
+        if (fd < 0) {
+          QMessageBox msgBox;
+          msgBox.setText("Could not open device. Did you load a module?");
+          msgBox.exec();
+          return;
+        }
 
-  QObject::connect(this->ui->actionCapture_device, &QAction::triggered, this, [this]() {
-    
-    int fd = open("/dev/pikernely0", O_RDWR);
-    if (fd < 0) {
-      QMessageBox msgBox;
-      msgBox.setText("Could not open device. Did you load a module?");
-      msgBox.exec();
-      return;
-    }
-    
-    auto d = new CaprureDeviceDialog(fd, this);
-    // a->setupUi(d);
-    if (d->exec() != QDialog::Rejected) {
+        auto d = new CaprureDeviceDialog(fd, this);
+        // a->setupUi(d);
+        if (d->exec() != QDialog::Rejected) {
 
-    std::string name = "Pico";
-    this->loadVCDData(name, d->data);
-    }
-    // if d->e();
-
-    
-  });
+          std::string name = "Pico";
+          this->loadVCDData(name, d->data);
+        }
+        // if d->e();
+      });
 }
 
 void WavyMainWindow::addSelectedDumps() {
@@ -160,6 +156,21 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
         if (keyEvent->key() == Qt::Key_Return) {
           this->addSelectedDumps();
         }
+
+      } else {
+        if (keyEvent->key() == Qt::Key_Right) {
+          this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(1);
+          this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
+          qDebug() << "1";
+          
+        }
+        if (keyEvent->key() == Qt::Key_Left) {
+          this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(-1);
+          this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
+          qDebug() << "-1";
+        
+        }
+
       }
     }
   }
@@ -174,17 +185,17 @@ void WavyMainWindow::closeTab(int idx) {
   this->removeActiveVCD();
 };
 
-void WavyMainWindow::loadVCDData(std::string path, VCDData*data) {
+void WavyMainWindow::loadVCDData(std::string path, VCDData *data) {
   // load data
   VCDData *VCDData;
 
   try {
-    if (data==nullptr) {
+    if (data == nullptr) {
 
-    VCDData =
-        this->parser->getVCDData(new VCDTokenStream(new VCDCharStream(path)));
+      VCDData =
+          this->parser->getVCDData(new VCDTokenStream(new VCDCharStream(path)));
     } else {
-      VCDData=data;
+      VCDData = data;
     }
 
     if (VCDData->errors.size()) {
