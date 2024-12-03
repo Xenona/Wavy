@@ -386,6 +386,10 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         } else {
           idx = this->isScalar(dump, this->top->vars[i].identifier);
           if (idx != -1) {
+            if (!scalInited) {
+              path.moveTo(0, yLow);
+              yPrev = yLow;
+            }
             scalInited = true;
             // draw an angle depending on state
             if (prevTime)
@@ -429,6 +433,9 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           idx = this->isScalar(dump, this->top->vars[i].identifier);
 
           if (idx != -1) {
+              if (!scalInited) {
+              path.moveTo(0, yLow);
+            }
             scalInited = true;
             prev = dump.scals[idx].value;
             prevString = dump.scals[idx].stringValue;

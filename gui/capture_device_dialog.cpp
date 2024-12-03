@@ -162,6 +162,7 @@ void CaprureDeviceDialog::prepare() {
       .parentScopeID = "",
   }};
   this->data->timepoints = {};
+  this->info={};
 }
 
 void CaprureDeviceDialog::start() {
@@ -228,6 +229,10 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
 
     if (a <= 0) {
       printf("%d", a);
+      this->reject();
+      QMessageBox msgBox;
+      msgBox.setText("Error: RPI Pico got detached!");
+      msgBox.exec();
       break;
     }
 
@@ -250,9 +255,10 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
         for (int k = 0; k <= 7; k++) {
           if (((prev >> k) & 1) != ((pkt.data[i] >> k) & 1)) {
             active_pins |= (1 << k);
-            printf("REad hhheee %8x\n", active_pins);
+            // printf("REad hhheee %8x\n", active_pins);
             num_of_events++;
             data.scals.push_back({.value = (pkt.data[i] >> k) & 1,
+                                  .stringValue = std::to_string((pkt.data[i] >> k) & 1),
                                   .identifier = std::to_string(k + 1)});
           }
         }
@@ -265,9 +271,9 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
         prev = pkt.data[i];
       }
     }
-    printf("Recieved packet %d started=%ld duration=%d last=%s data=%8x\n",
-           pkt.packet_id, pkt.time_start, pkt.time_duration, last ? "y" : "n",
-           pkt.data[0]);
+    // printf("Recieved packet %d started=%ld duration=%d last=%s data=%8x\n",
+    //        pkt.packet_id, pkt.time_start, pkt.time_duration, last ? "y" : "n",
+    //        pkt.data[0]);
 
     short count = 0;
     short active_pins_c = active_pins;
@@ -276,12 +282,12 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
       count += (active_pins_c & 1);
       active_pins_c >>= 1;
     }
-    printf("active_pins=%8x\n", count);
+    // printf("active_pins=%8x\n", count);
     pthread_mutex_lock(&this->table_mutex);
     this->info.bytes = samples;
     this->info.events = num_of_events;
     this->info.pins = count;
-    printf("bytes=%d events=%ld pins=%d\n", samples, num_of_events, count);
+    // printf("bytes=%d events=%ld pins=%d\n", samples, num_of_events, count);
     pthread_mutex_unlock(&this->table_mutex);
   }
   printf("Total captured: %d\n", samples);

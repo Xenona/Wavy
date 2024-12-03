@@ -91,7 +91,7 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
           VCDData *data = d->data;
           pthread_mutex_unlock(&d->data_mutex);
 
-          std::string name = "Pico";
+          std::string name = "Pico" + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss").toStdString();
           
           this->loadVCDData(name, data);
           delete d;
