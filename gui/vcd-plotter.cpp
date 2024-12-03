@@ -46,7 +46,7 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
   horizontalLayout->setSpacing(0);
   horizontalLayout->setContentsMargins(0, 0, 0, 0);
   this->selected_dumps = new QTreeWidget(verticalLayoutWidget_4);
-  this->selected_dumps->header()->setVisible(false);
+  // this->selected_dumps->header()->setVisible(false);
   this->selected_dumps->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   // this->selected_dumps_list->setMaximumWidth(600);
   // this->selected_dumps_list->setMinimumWidth(50);
@@ -54,6 +54,12 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
   // this->selected_dumps->setSizePolicy(QSizePolicy::Policy::Expanding);
   this->selected_dumps->show();
   this->selected_dumps->setSelectionMode(QAbstractItemView::MultiSelection);
+  auto w = new QTreeWidgetItem();
+  auto f = QFont(w->font(0));
+  f.setPointSize(16);
+  w->setFont(0, f);
+  w->setText(0, "Selected dumps");
+  this->selected_dumps->setHeaderItem(w);
   horizontalLayout->addWidget(selected_dumps);
   this->vertScroll = this->selected_dumps->verticalScrollBar();
   splitter->addWidget(verticalLayoutWidget_4);
@@ -192,11 +198,11 @@ void VCDPlotter::sideShiftView(int delta) {
       this->leftFOVborder -= delta;
       this->rightFOVborder -= delta;
     } else {
-      if (this->leftFOVborder!=0) {
+      if (this->leftFOVborder != 0) {
 
-      this->leftFOVborder = 0;
-      this->rightFOVborder -=delta;
-      } 
+        this->leftFOVborder = 0;
+        this->rightFOVborder -= delta;
+      }
     }
 
   } else {

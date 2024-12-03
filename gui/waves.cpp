@@ -10,6 +10,7 @@
 #include <qnamespace.h>
 #include <qpainterpath.h>
 #include <qpoint.h>
+#include <qrgb.h>
 #include <string>
 
 bool is_half_state(std::string &v) {
@@ -69,7 +70,8 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
   const int WAVES_GAP = 5;
   int HEXAGONS_STEP;
 
-  double y = WAVES_GAP;
+  double lineHeight = this->top->itemRect.height();
+  double y = WAVES_GAP+lineHeight;
   int a = this->top->top->leftFOVborder;
   int b = this->top->top->rightFOVborder;
   if (this->top->data->timepoints.size())
@@ -81,9 +83,46 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     HEXAGONS_STEP = 1;
   }
   int width = this->top->size().width();
-  double lineHeight = this->top->itemRect.height();
 
-  // iterating over variables starting from visible ones (scrollHeight idx)
+  int amount =
+      std::max(1, static_cast<int>((float(this->top->top->maxrightborder -
+                                          this->top->top->minleftborder) /
+                                    float(b - a)) *
+                                   3.0));
+  double distance = double(b - a) / amount;
+
+  int numTicks;
+  if (b - a > 100) {
+    numTicks = 10;
+  } else if (b - a > 50) {
+    numTicks = 5;
+  } else {
+    numTicks = 2;
+  }
+
+  double tickDistance = double(b - a) / numTicks;
+
+  painter->save();
+  for (double i = a; i <= b; i += tickDistance) {
+    double scenePos = ((i - a) / (double)(b - a)) * width;
+
+    painter->drawLine(QPointF{scenePos, lineHeight},
+                      QPointF{scenePos, (double)this->top->size().height()});
+
+    QString label = QString::number(i, 'i', (b - a > 100) ? 0 : 2);
+
+    QFont font = painter->font();
+    font.setPixelSize(lineHeight - WAVES_GAP*4);
+    painter->setFont(font);
+    QFontMetricsF fm(font);
+    double valWidth = fm.horizontalAdvance(label);
+
+    QRectF rect = {scenePos - valWidth / 2, 0, valWidth, lineHeight};
+    painter->setPen(QColor(136, 139, 143));
+    painter->drawText(rect, Qt::AlignCenter, label);
+  }
+  painter->restore();
+
   for (int i = this->top->scrollHeight; i < this->top->vars.length(); i++) {
 
     Path path = Path(this->top->waveStates[i].color);
@@ -116,10 +155,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
       double t = timepoint.time;
 
       double scenePos = ((t - a) / (double)(b - a)) * width;
-      painter->drawLine(QPointF{scenePos, 0},
-                        QPointF{scenePos, (double)this->top->size().height()});
-      painter->drawText(scenePos, 20,
-                        QString::fromStdString(std::to_string(std::floor(t))));
+
       int idx = this->isVector(dump, this->top->vars[i].identifier);
       if (idx != -1) {
         isVector = true;
