@@ -164,15 +164,13 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
 
       } else {
         if (keyEvent->key() == Qt::Key_Right) {
-          this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(1);
+          this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(-1);
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
-          qDebug() << "1";
           
         }
         if (keyEvent->key() == Qt::Key_Left) {
-          this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(-1);
+          this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(1);
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
-          qDebug() << "-1";
         
         }
 

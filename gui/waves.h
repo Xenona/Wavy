@@ -22,4 +22,11 @@ public:
                double lineHeight, int WAVES_GAP, long long prev,
                long long prevFloat, DumpData dump, int idx, double y,
                std::string prevString, long long index, Qt::GlobalColor col = Qt::transparent);
+auto color(std::string &v, int i);
+auto letter(std::string &v);
+bool is_x_state(std::string &v);
+bool is_z_state(std::string &v);
+bool is_partial_state(std::string &v);
+bool is_half_state(std::string &v);
+
 };
