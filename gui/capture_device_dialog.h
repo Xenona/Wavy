@@ -57,6 +57,7 @@ public:
   QDateTime prevTime;
 
   bool isRunning = false;
+  int period = 5;
 
 private:
   Ui::CaprureDeviceDialog

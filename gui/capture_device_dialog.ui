@@ -84,16 +84,25 @@
       </property>
      </item>
      <item row="1" column="0">
+      <property name="text">
+       <string/>
+      </property>
       <property name="flags">
        <set>ItemIsSelectable|ItemIsEnabled</set>
       </property>
      </item>
      <item row="2" column="0">
+      <property name="text">
+       <string/>
+      </property>
       <property name="flags">
-       <set>ItemIsSelectable</set>
+       <set>ItemIsSelectable|ItemIsEnabled</set>
       </property>
      </item>
      <item row="3" column="0">
+      <property name="text">
+       <string/>
+      </property>
       <property name="flags">
        <set>ItemIsSelectable|ItemIsEnabled</set>
       </property>

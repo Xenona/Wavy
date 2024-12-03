@@ -46,6 +46,7 @@ public:
   QToolButton *sidebar_objects_button_close;
   QToolButton *sidebar_scope_button_close;
   QToolButton *sidebar_scope_button_ok;
+  QToolButton *sidebar_scope_button_save;
   QWidget *sidebar_objects_scroll_container;
   QWidget *sidebar_scope_scroll_container;
   QVBoxLayout *l_9;
@@ -57,6 +58,7 @@ public:
   void setVCDDataActive(QString path);
   QString VCDDataActive();
   void removeActiveVCD();
+  void saveVCD();
 
   bool eventFilter(QObject *obj, QEvent *event);
   void addSelectedDumps();

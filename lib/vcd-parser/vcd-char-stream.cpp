@@ -45,7 +45,7 @@ bool VCDCharStream::eof() {
     if (this->input.eof()) {
       return true;
     } else {
-      throw("Error reading the end of file (?)");
+      throw std::runtime_error("Error reading the end of file (?)");
       return false;
     }
   } else {
@@ -54,6 +54,6 @@ bool VCDCharStream::eof() {
 }
 
 void VCDCharStream::die(std::string message) {
-  throw(message + " (line " + std::to_string(this->line) + ", char " +
+  throw std::runtime_error(message + " (line " + std::to_string(this->line) + ", char " +
         std::to_string(this->column) + ")");
 }

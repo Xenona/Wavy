@@ -13,6 +13,7 @@
 #include <QTreeWidget>
 #include <QWheelEvent>
 #include <cmath>
+#include <exception>
 #include <qabstractitemview.h>
 #include <qabstractspinbox.h>
 #include <qboxlayout.h>
@@ -141,11 +142,16 @@ VCDPlotter::VCDPlotter(QString path, VCDData *data, WavyMainWindow *top,
                          selectedElements.size() == 0);
                    });
 
-  if (!this->data->timepoints.size()) {
+  if (this->data->timepoints.size() == 0) {
     this->data->warns.push_back("The timing diagram has no time points!");
   } else {
     this->leftFOVborder = 0;
+    try {
     this->rightFOVborder = this->data->timepoints.back().time;
+
+    } catch (...) {
+      return;
+    }
     this->minleftborder = this->leftFOVborder;
     this->maxrightborder = this->rightFOVborder;
     this->marker = this->leftFOVborder;

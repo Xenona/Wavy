@@ -1,0 +1,34 @@
+$date 2024-12-03 18:35:39 $end 
+$version Wavy XM_saved $end 
+$timescale 1 us $end 
+$scope module RPIPico $end
+$var wire 1 # GP1 $end
+$var wire 1 $ GP2 $end
+$var wire 1 % GP3 $end
+$var wire 1 & GP4 $end
+$var wire 1 ' GP5 $end
+$var wire 1 * GP6 $end
+$var wire 1 < GP7 $end
+$var wire 1 + GP8 $end
+$upscope $end
+$enddefinitions $end
+#0
+1'
+#256635
+0'
+#719860
+1'
+#1001870
+0'
+#1237480
+1'
+#1507350
+0'
+#1704025
+1'
+#1950035
+0'
+#2086260
+1'
+#2327805
+0'

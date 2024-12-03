@@ -102,7 +102,7 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
     pthread_mutex_lock(&this->data_mutex);
     auto d = this->data;
     pthread_mutex_unlock(&this->data_mutex);
-    if (d->timepoints.size()) {
+    if (d->timepoints.size() < 2) {
       this->accept();
     } else {
       QMessageBox msgBox;
@@ -121,55 +121,61 @@ void CaprureDeviceDialog::prepare() {
     delete this->data;
   }
   this->data = new VCDData{};
-  this->data->version.version = "XM Wave generator";
+  this->data->date.date = QDateTime::currentDateTime()
+                              .toString("yyyy-MM-dd HH:mm:ss")
+                              .toStdString();
+  this->data->version.version = "Wavy XM";
+  this->data->timescale.precision = 1;
+  this->data->timescale.unit = "us";
+
   this->data->scopes = {{
       .type = ScopeTypes::Module,
       .ID = "1",
-      .name = "RPI Pico",
+      .name = "RPIPico",
       .vars = {{.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "1",
+                .identifier = "#",
                 .trueName = "GP1"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "2",
+                .identifier = "$",
                 .trueName = "GP2"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "3",
+                .identifier = "%",
                 .trueName = "GP3"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "4",
+                .identifier = "&",
                 .trueName = "GP4"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "5",
+                .identifier = "'",
                 .trueName = "GP5"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "6",
+                .identifier = "*",
                 .trueName = "GP6"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "7",
+                .identifier = "<",
                 .trueName = "GP7"},
                {.type = VarTypes::Wire,
                 .size = 1,
-                .identifier = "8",
+                .identifier = "+",
                 .trueName = "GP8"}},
 
       .parentScopeID = "",
   }};
   this->data->timepoints = {};
-  this->info={};
+  this->info = {};
 }
 
 void CaprureDeviceDialog::start() {
 
   struct KERNELY_PKT c;
   c.state_flags = KERNELY_ENABLE;
-  c.timer_period = 5;
+  c.timer_period = this->period;
   pthread_mutex_lock(&this->pico_mutex);
   write(fd, &c, sizeof(c));
   pthread_mutex_unlock(&this->pico_mutex);
@@ -237,8 +243,14 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
     }
 
     last = pkt.packet_flags & PICOY_LAST;
+    printf("Lst %x", last);
     if (seq != 0 && pkt.packet_id != seq) {
       printf("Seems we lost packet %d %d\n", pkt.packet_id, seq);
+      pthread_mutex_lock(&this->data_mutex);
+      this->data->warns.push_back("Seems we lost packet " +
+                                  std::to_string(pkt.packet_id) +
+                                  std::to_string(seq));
+      pthread_mutex_unlock(&this->data_mutex);
     }
     seq = pkt.packet_id + 1;
 
@@ -253,13 +265,22 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
         DumpData data = {.scals = {}};
 
         for (int k = 0; k <= 7; k++) {
+
           if (((prev >> k) & 1) != ((pkt.data[i] >> k) & 1)) {
             active_pins |= (1 << k);
-            // printf("REad hhheee %8x\n", active_pins);
             num_of_events++;
-            data.scals.push_back({.value = (pkt.data[i] >> k) & 1,
-                                  .stringValue = std::to_string((pkt.data[i] >> k) & 1),
-                                  .identifier = std::to_string(k + 1)});
+            printf("REad hhheee %8x\n", last);
+            data.scals.push_back(
+                {.value = (pkt.data[i] >> k) & 1,
+                 .stringValue = std::to_string((pkt.data[i] >> k) & 1),
+                 .identifier = k + 1 == 0   ? "#"
+                               : k + 1 == 1 ? "$"
+                               : k + 1 == 2 ? "%"
+                               : k + 1 == 3 ? "&"
+                               : k + 1 == 4 ? "'"
+                               : k + 1 == 5 ? "*"
+                               : k + 1 == 6 ? "<"
+                                            : "+"});
           }
         }
         pthread_mutex_lock(&this->data_mutex);
@@ -272,8 +293,8 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
       }
     }
     // printf("Recieved packet %d started=%ld duration=%d last=%s data=%8x\n",
-    //        pkt.packet_id, pkt.time_start, pkt.time_duration, last ? "y" : "n",
-    //        pkt.data[0]);
+    //        pkt.packet_id, pkt.time_start, pkt.time_duration, last ? "y" :
+    //        "n", pkt.data[0]);
 
     short count = 0;
     short active_pins_c = active_pins;

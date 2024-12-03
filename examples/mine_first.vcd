@@ -1,0 +1,30 @@
+$date 2024-12-03 17:56:04 $end 
+$version Wavy XM_saved $end 
+$timescale 1 us $end 
+$scope module RPI Pico $end
+$var wire 1 1 GP1 $end
+$var wire 1 2 GP2 $end
+$var wire 1 3 GP3 $end
+$var wire 1 4 GP4 $end
+$var wire 1 5 GP5 $end
+$var wire 1 6 GP6 $end
+$var wire 1 7 GP7 $end
+$var wire 1 8 GP8 $end
+$upscope $end
+$enddefinitions $end
+#0
+41
+#185310
+40
+#1248605
+41
+#1400455
+40
+#2217075
+41
+#2396915
+40
+#3081435
+41
+#3269955
+40

@@ -25,8 +25,8 @@ VCDData *VCDParser::getVCDData(VCDTokenStream *tokenStream) {
       this->error(std::string{"An error happened during parsing: "} + e.what(),
                   vcd);
     } catch (...) {
-      qFatal() << "An unhandled exception in vcd-parser. Seems like token "
-                  "stream failed.";
+      throw std::runtime_error("An unhandled exception in vcd-parser. Seems like token "
+                  "stream failed.");
     }
     switch (this->state) {
 

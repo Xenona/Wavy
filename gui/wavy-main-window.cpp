@@ -31,6 +31,7 @@
 #include <qtoolbutton.h>
 #include <qtreewidget.h>
 #include <qwidget.h>
+#include <sstream>
 #include <string>
 
 WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
@@ -38,11 +39,13 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   this->waveform_tabs = ui->waveform_tabs;
   this->sidebar = ui->sidebar;
   this->sidebar_scope_button_ok = ui->sidebar_scope_button_ok;
+  this->sidebar_scope_button_save = ui->sidebar_scope_button_save;
   this->sidebar_objects_scroll_container = ui->sidebar_objects_scroll_container;
   this->sidebar_scope_scroll_container = ui->sidebar_scope_scroll_container;
   this->l_9 = ui->l_9;
   this->l_10 = ui->l_10;
   this->action_open = ui->action_open;
+  this->sidebar_scope_button_save->setVisible(false);
 
   this->parser = new VCDParser();
   qApp->installEventFilter(this);
@@ -70,6 +73,9 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
   QObject::connect(this->sidebar_scope_button_ok, &QToolButton::clicked, this,
                    &WavyMainWindow::addSelectedDumps);
 
+  QObject::connect(this->sidebar_scope_button_save, &QToolButton::clicked, this,
+                   &WavyMainWindow::saveVCD);
+
   QObject::connect(this->waveform_tabs, &QTabWidget::tabCloseRequested, this,
                    &WavyMainWindow::closeTab);
 
@@ -91,8 +97,10 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
           VCDData *data = d->data;
           pthread_mutex_unlock(&d->data_mutex);
 
-          std::string name = "Pico" + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss").toStdString();
-          
+          std::string name = "Pico" + QDateTime::currentDateTime()
+                                          .toString("yyyy-MM-dd HH:mm:ss")
+                                          .toStdString();
+
           this->loadVCDData(name, data);
           delete d;
         }
@@ -118,6 +126,52 @@ void WavyMainWindow::addSelectedDumps() {
 
   this->vcdDataFiles.value(this->_VCDDataActive)
       .tab->addSelectedDumps(items, varData);
+}
+
+void WavyMainWindow::saveVCD() {
+
+  QString filename = QFileDialog::getSaveFileName(
+      nullptr, "Save File", "", "VCD Files (*.vcd);;All Files (*)");
+  if (filename.isEmpty()) {
+    qDebug() << "Save operation canceled.";
+    return; // Exit the function if no filename was provided
+  }
+  QFile file(filename);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    QMessageBox msgBox;
+    msgBox.setText("Error opening file for writing:" + filename);
+    msgBox.exec();
+    return;
+  }
+  QTextStream ss(&file);
+  VCDData *d = this->vcdDataFiles.value(_VCDDataActive).vcddata;
+
+  ss << "$date " << QString::fromStdString(d->date.date) << " $end \n"
+     << "$version " << QString::fromStdString(d->version.version + "_saved")
+     << " $end \n"
+     << "$timescale "
+     << QString::fromStdString(std::to_string(d->timescale.precision) + " " +
+                               d->timescale.unit)
+     << " $end \n";
+
+  ss << "$scope module " << QString::fromStdString(d->scopes.back().name)
+     << " $end\n";
+  for (auto &var : d->scopes.back().vars) {
+    ss << "$var wire " << var.size << " "
+       << QString::fromStdString(var.identifier) << " "
+       << QString::fromStdString(var.trueName) << " $end\n";
+  }
+  ss << "$upscope $end\n";
+  ss << "$enddefinitions $end\n";
+
+  for (auto &time : d->timepoints) {
+    ss << "#" << time.time << "\n";
+    for (auto &v : time.data.scals) {
+      ss << QString::fromStdString(v.stringValue+v.identifier) << "\n";
+    }
+  }
+
+  file.close();
 }
 
 bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
@@ -192,6 +246,7 @@ void WavyMainWindow::closeTab(int idx) {
   VCDPlotter *tab = static_cast<VCDPlotter *>(this->waveform_tabs->widget(idx));
 
   this->_VCDDataActive = tab->path;
+  this->sidebar_scope_button_save->setVisible(false);
   this->removeActiveVCD();
 };
 
@@ -226,10 +281,16 @@ void WavyMainWindow::loadVCDData(std::string path, VCDData *data) {
       msgBox.exec();
     }
   } catch (const std::exception &e) {
+  } catch (...) {
+    qDebug() << "Unhandled error";
+  }
+
+  if (VCDData == nullptr) {
     QMessageBox msgBox;
-    msgBox.setText(
-        QString::fromStdString(std::string{"Error happened: "} + e.what()));
+    msgBox.setText(QString::fromStdString(std::string{
+        "Could not parse VCD file. Please, provide a correct file"}));
     msgBox.exec();
+    return;
   }
 
   QString qstring_path = QString::fromStdString(path);
@@ -264,7 +325,7 @@ void WavyMainWindow::loadVCDData(std::string path, VCDData *data) {
 void WavyMainWindow::setVCDDataActive(QString path) {
 
   if (!this->vcdDataFiles.contains(path)) {
-    throw "One should not set active non-existing file";
+    throw std::runtime_error("One should not set active non-existing file");
     return;
   }
 
@@ -291,18 +352,12 @@ void WavyMainWindow::setVCDDataActive(QString path) {
   this->vcdDataFiles.value(path).scopeTree->show();
   this->vcdDataFiles.value(path).table->show();
 
-  // this->vcdDataFiles.value(_VCDDataActive).scopeTree->layout->replaceWidget(this->vcdDataFiles.value(_VCDDataActive).scopeTree,
-  // this->vcdDataFiles.value(path).scopeTree);
-  // this->vcdDataFiles.value(path).scopeTree->layout->setParent(this->sidebar_scope_scroll_container);
-  // auto res =
-  // this->l_9->replaceWidget(this->vcdDataFiles.value(_VCDDataActive).scopeTree,
-  // this->vcdDataFiles.value(path).scopeTree); if (res == nullptr ){ qDebug()
-  // << "JHE";
+  if (this->vcdDataFiles.value(path).vcddata->version.version == "Wavy XM") {
+    this->sidebar_scope_button_save->setVisible(true);
+  } else {
+    this->sidebar_scope_button_save->setVisible(false);
+  }
 
-  // }
-
-  // todo
-  // make scrollbar appear when length is too much
   this->vcdDataFiles.value(path).scopeTree->resizeColumnToContents(0);
 
   // setting current file focused;
