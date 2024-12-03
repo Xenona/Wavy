@@ -12,6 +12,7 @@
 #include <qdatetime.h>
 #include <qdialog.h>
 #include <qlogging.h>
+#include <qnamespace.h>
 #include <qpushbutton.h>
 #include <string>
 #include <thread>
@@ -40,6 +41,12 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
   item_events = this->ui->table->item(1, 0);
   item_pins_active = this->ui->table->item(2, 0);
   item_time_passed = this->ui->table->item(3, 0);
+  auto f = this->ui->label_listening->font();
+  f.setPointSize(20);
+
+  this->ui->label_listening->setText("Click Start to capture pins");
+  this->ui->label_listening->setFont(f);
+  this->ui->label_listening->setAlignment(Qt::AlignCenter);
 
   QObject::connect(buttonStart, &QPushButton::clicked, this, [this]() {
     this->stop();
@@ -52,6 +59,11 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
     this->buttonStop->setVisible(true);
     this->prevTime = QDateTime::currentDateTime();
     timer->start(1000);
+    auto f = this->ui->label_listening->font();
+    f.setPointSize(20);
+    this->ui->label_listening->setText("Capturing pins...");
+    this->ui->label_listening->setFont(f);
+    this->ui->label_listening->setAlignment(Qt::AlignCenter);
   });
 
   QObject::connect(buttonStop, &QPushButton::clicked, this, [this]() {
@@ -67,6 +79,11 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
     auto d = this->data;
     pthread_mutex_unlock(&this->data_mutex);
     timer->stop();
+    auto f = this->ui->label_listening->font();
+    f.setPointSize(20);
+    this->ui->label_listening->setText("Data gathered");
+    this->ui->label_listening->setFont(f);
+    this->ui->label_listening->setAlignment(Qt::AlignCenter);
   });
 
   QObject::connect(this->timer, &QTimer::timeout, this, [this]() {
