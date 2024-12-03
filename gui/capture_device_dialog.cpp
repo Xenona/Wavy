@@ -102,7 +102,7 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
     pthread_mutex_lock(&this->data_mutex);
     auto d = this->data;
     pthread_mutex_unlock(&this->data_mutex);
-    if (d->timepoints.size() < 2) {
+    if (d->timepoints.size() >= 2) {
       this->accept();
     } else {
       QMessageBox msgBox;
