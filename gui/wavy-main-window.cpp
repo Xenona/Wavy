@@ -92,12 +92,7 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
           pthread_mutex_unlock(&d->data_mutex);
 
           std::string name = "Pico";
-          if (!data->timepoints.size()) {
-            QMessageBox msgBox;
-            msgBox.setText("No changes were captured, can't show anything.");
-            msgBox.exec();
-            return;
-          }
+          
           this->loadVCDData(name, data);
           delete d;
         }

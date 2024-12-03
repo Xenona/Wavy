@@ -1,7 +1,17 @@
 #include "../../../lib/vcd-parser/vcd-data.h"
+#include <QDateTime>
 #include <QDialog>
+#include <QTableWidgetItem>
+#include <cstdint>
+
 
 #pragma once
+
+struct TableInfo {
+  uint64_t bytes;
+  uint64_t events;
+  short pins;
+};
 
 namespace Ui {
 class CaprureDeviceDialog;
@@ -25,9 +35,28 @@ public:
     cdd->readAll(cdd);
     return nullptr;
   };
+  QString timeDifference(const QDateTime &start, const QDateTime &end);
 
   pthread_mutex_t data_mutex;
   pthread_mutex_t pico_mutex;
+  pthread_mutex_t table_mutex;
+
+  QPushButton *buttonStart;
+  QPushButton *buttonDone;
+  QPushButton *buttonStop;
+  QPushButton *buttonCancel;
+
+  QTableWidgetItem *item_bytes;
+  QTableWidgetItem *item_events;
+  QTableWidgetItem *item_pins_active;
+  QTableWidgetItem *item_time_passed;
+
+  TableInfo info;
+
+  QTimer *timer;
+  QDateTime prevTime;
+
+  bool isRunning = false;
 
 private:
   Ui::CaprureDeviceDialog
