@@ -14,11 +14,11 @@ public:
   CaprureDeviceDialog(int fd, QWidget *parent = 0);
   ~CaprureDeviceDialog();
 
-  VCDData *data=nullptr;
+  VCDData *data = nullptr;
   void start();
   void prepare();
   void stop();
-  void readAll(CaprureDeviceDialog* cdd);
+  void readAll(CaprureDeviceDialog *cdd);
 
   static void *readAllTrampoline(void *arg) {
     CaprureDeviceDialog *cdd = (CaprureDeviceDialog *)arg;
@@ -26,7 +26,8 @@ public:
     return nullptr;
   };
 
-
+  pthread_mutex_t data_mutex;
+  pthread_mutex_t pico_mutex;
 
 private:
   Ui::CaprureDeviceDialog

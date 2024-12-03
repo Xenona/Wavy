@@ -131,7 +131,6 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     Path path = Path(this->top->waveStates[i].color);
     Path auxPath = Path(this->top->waveStates[i].color);
 
-    path.moveTo(0, y);
 
     double prevScenePos = 0;
     double otherPrevScenePos = 0;
@@ -142,7 +141,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     std::string otherPrevString;
     std::string otherPrevPrevString;
     bool inited = false;
-    bool vecInited = false;
+    bool scalInited = false;
 
     int prevTime = 0;
     bool isVector = false;
@@ -150,6 +149,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     double yLow = y + lineHeight - WAVES_GAP;
     double yHalf = y + (yLow - y) / 2;
     double yPrev = yHalf;
+    path.moveTo(0, y);
     auxPath.moveTo(0, yLow);
 
     // iterating over time points (events)
@@ -326,6 +326,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         } else {
           idx = this->isScalar(dump, this->top->vars[i].identifier);
           if (idx != -1) {
+            scalInited = true;
             // draw an angle depending on state
             if (prevTime)
               path.lineTo(scenePos, yPrev, color(prevString, i));
@@ -368,6 +369,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
           idx = this->isScalar(dump, this->top->vars[i].identifier);
 
           if (idx != -1) {
+            scalInited = true;
             prev = dump.scals[idx].value;
             prevString = dump.scals[idx].stringValue;
             otherPrevPrevString = otherPrevString;
@@ -403,7 +405,14 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         path.lineTo(width, yPrev, color(x, i));
 
       } else {
+        if (!scalInited) {
+          path.moveTo(0,  yHalf);
+        path.lineTo(width, yPrev, Qt::red);
+        
+        } else {
+
         path.lineTo(width, yPrev, color(otherPrevString, i));
+        }
       }
 
     } else {

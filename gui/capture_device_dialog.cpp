@@ -7,6 +7,7 @@
 #include <chrono>
 #include <fcntl.h>
 #include <qdialog.h>
+#include <qlogging.h>
 #include <qpushbutton.h>
 #include <string>
 #include <thread>
@@ -30,11 +31,8 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
 
   QObject::connect(buttonStart, &QPushButton::clicked, this, [this]() {
     this->stop();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     this->prepare();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     pthread_create(&pt, NULL, &CaprureDeviceDialog::readAllTrampoline, this);
-    std::this_thread::sleep_for(std::chrono::milliseconds(0));
     this->start();
   });
 
@@ -43,10 +41,12 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
     pthread_join(pt, NULL);
     printf("Kernel read all\n");
   });
+  pthread_mutex_init(&this->data_mutex, nullptr);
+  pthread_mutex_init(&this->pico_mutex, nullptr);
 }
 
 void CaprureDeviceDialog::prepare() {
-  
+
   if (this->data != nullptr) {
     delete this->data;
   }
@@ -92,7 +92,6 @@ void CaprureDeviceDialog::prepare() {
       .parentScopeID = "",
   }};
   this->data->timepoints = {};
-
 }
 
 void CaprureDeviceDialog::start() {
@@ -100,7 +99,10 @@ void CaprureDeviceDialog::start() {
   struct KERNELY_PKT c;
   c.state_flags = KERNELY_ENABLE;
   c.timer_period = 5;
+  pthread_mutex_lock(&this->pico_mutex);
   write(fd, &c, sizeof(c));
+  pthread_mutex_unlock(&this->pico_mutex);
+
   printf("Kernel start\n");
 }
 
@@ -108,12 +110,16 @@ void CaprureDeviceDialog::stop() {
   struct KERNELY_PKT c;
   c.state_flags = KERNELY_FINISH;
   c.timer_period = 0;
+  pthread_mutex_lock(&this->pico_mutex);
   write(fd, &c, sizeof(c));
+  pthread_mutex_unlock(&this->pico_mutex);
+
   printf("Kernel finish\n");
 }
 
 CaprureDeviceDialog::~CaprureDeviceDialog() {
-
+  pthread_mutex_destroy(&this->data_mutex);
+  pthread_mutex_destroy(&this->pico_mutex);
 };
 
 void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
@@ -128,7 +134,10 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
   while (!last) {
     struct PICOY_PKT pkt;
 
+    pthread_mutex_lock(&this->pico_mutex);
     int a = read(fd, &pkt, sizeof(pkt));
+    pthread_mutex_unlock(&this->pico_mutex);
+
     if (a <= 0) {
       printf("%d", a);
       break;
@@ -157,17 +166,18 @@ void CaprureDeviceDialog::readAll(CaprureDeviceDialog *cdd) {
                                   .identifier = std::to_string(k + 1)});
           }
         }
-
+        pthread_mutex_lock(&this->data_mutex);
         this->data->timepoints.push_back(
             {.time = (int)(time - first_time), .data = data});
+        pthread_mutex_unlock(&this->data_mutex);
         printf("[%ldus](+ %ldus) =%x\n", time, time - prev_time, pkt.data[i]);
         prev_time = time;
         prev = pkt.data[i];
       }
     }
-    // printf("Recieved packet %d started=%ld duration=%d last=%s\n",
-    // pkt.packet_id,
-    //        pkt.time_start, pkt.time_duration, last ? "y" : "n");
+    printf("Recieved packet %d started=%ld duration=%d last=%s data=%8x\n",
+           pkt.packet_id, pkt.time_start, pkt.time_duration, last ? "y" : "n",
+           pkt.data[0]);
   }
-  printf("Toal captured: %d\n", samples);
+  printf("Total captured: %d\n", samples);
 }

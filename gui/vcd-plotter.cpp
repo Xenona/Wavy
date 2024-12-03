@@ -165,7 +165,7 @@ void VCDPlotter::setCustomisations(Qt::GlobalColor color, base base) {
   auto selected = this->selected_dumps->selectedItems();
   auto all = this->dumpsList;
   for (int i = 0; i < all.size(); i++) {
-    for (int j = i; j < selected.size(); j++) {
+    for (int j = 0; j < selected.size(); j++) {
 
       if (all[i] == selected[j]) {
         if (base != base::NIL) {

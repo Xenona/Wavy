@@ -86,8 +86,19 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
         // a->setupUi(d);
         if (d->exec() != QDialog::Rejected) {
 
+          pthread_mutex_lock(&d->data_mutex);
+          VCDData *data = d->data;
+          pthread_mutex_unlock(&d->data_mutex);
+
           std::string name = "Pico";
-          this->loadVCDData(name, d->data);
+          if (!data->timepoints.size()) {
+            QMessageBox msgBox;
+            msgBox.setText("No changes were captured, can't show anything.");
+            msgBox.exec();
+            return;
+          }
+          this->loadVCDData(name, data);
+          delete d;
         }
         // if d->e();
       });
@@ -152,7 +163,10 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
           }
           if (!this->vcdDataFiles.value(_VCDDataActive).tab->dumpsList.size()) {
             this->vcdDataFiles.value(_VCDDataActive).tab->leftFOVborder = 0;
-            this->vcdDataFiles.value(_VCDDataActive).tab->rightFOVborder = this->vcdDataFiles.value(_VCDDataActive).vcddata->timepoints.back().time;
+            this->vcdDataFiles.value(_VCDDataActive).tab->rightFOVborder =
+                this->vcdDataFiles.value(_VCDDataActive)
+                    .vcddata->timepoints.back()
+                    .time;
           }
 
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
@@ -166,14 +180,11 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
         if (keyEvent->key() == Qt::Key_Right) {
           this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(-1);
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
-          
         }
         if (keyEvent->key() == Qt::Key_Left) {
           this->vcdDataFiles.value(_VCDDataActive).tab->sideShiftView(1);
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
-        
         }
-
       }
     }
   }
