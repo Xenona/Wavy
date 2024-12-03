@@ -115,4 +115,10 @@ InfoTableWidget::InfoTableWidget(VCDData *data) {
 
 
   this->setSortingEnabled(__sortingEnabled);
+  this->resizeRowToContents(0);
+  this->resizeRowToContents(1);
+  this->resizeRowToContents(2);
+  this->resizeRowToContents(3);
+  this->resizeRowToContents(4);
+  this->resizeRowToContents(5);
 }
