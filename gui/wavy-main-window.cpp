@@ -65,6 +65,7 @@ WavyMainWindow::WavyMainWindow() : ui(new Ui::WavyMainWindow) {
           }
         }
       });
+  this->ui->menuChange_color->setDisabled(false);
 
   QObject::connect(this->sidebar_scope_button_ok, &QToolButton::clicked, this,
                    &WavyMainWindow::addSelectedDumps);

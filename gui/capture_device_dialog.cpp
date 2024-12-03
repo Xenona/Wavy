@@ -32,8 +32,8 @@ CaprureDeviceDialog::CaprureDeviceDialog(int fd, QWidget *parent)
   QObject::connect(buttonStart, &QPushButton::clicked, this, [this]() {
     this->stop();
     this->prepare();
-    pthread_create(&pt, NULL, &CaprureDeviceDialog::readAllTrampoline, this);
     this->start();
+    pthread_create(&pt, NULL, &CaprureDeviceDialog::readAllTrampoline, this);
   });
 
   QObject::connect(buttonStop, &QPushButton::clicked, this, [this]() {

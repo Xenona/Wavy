@@ -28,5 +28,6 @@ bool is_x_state(std::string &v);
 bool is_z_state(std::string &v);
 bool is_partial_state(std::string &v);
 bool is_half_state(std::string &v);
+auto get_text(std::string &v, int i);
 
 };

@@ -2,6 +2,7 @@
 #include "path.h"
 #include <QPainter>
 #include <QPainterPath>
+#include <bitset>
 #include <climits>
 #include <cmath>
 #include <cstdlib>
@@ -12,13 +13,28 @@
 #include <qpainterpath.h>
 #include <qpoint.h>
 #include <qrgb.h>
+#include <sstream>
 #include <string>
 
 bool Waves::is_half_state(std::string &v) {
   return v == "x" || v == "X" || v == "z" || v == "Z";
 }
-bool Waves::is_x_state(std::string &v) { return v == "x" || v == "X"; }
-bool Waves::is_z_state(std::string &v) { return v == "z" || v == "Z"; }
+bool Waves::is_x_state(std::string &v) {
+  for (int i = 0; i < v.size(); i++) {
+    if (v[i] != 'x' && v[i] != 'X') {
+      return false;
+    }
+  }
+  return true;
+}
+bool Waves::is_z_state(std::string &v) {
+  for (int i = 0; i < v.size(); i++) {
+    if (v[i] != 'z' && v[i] != 'Z') {
+      return false;
+    }
+  }
+  return true;
+}
 bool Waves::is_partial_state(std::string &v) {
   for (int i = 0; i < v.size(); i++) {
     if (v[i] != '0' && v[i] != '1') {
@@ -41,6 +57,51 @@ auto Waves::color(std::string &v, int i) {
   } else {
     return this->top->waveStates[i].color;
   }
+}
+
+std::string toOctalString(unsigned long long value) {
+  std::stringstream ss;
+  ss << std::oct << value;
+  return ss.str();
+}
+
+std::string toHexString(unsigned long long value) {
+  std::stringstream ss;
+  ss << std::hex << std::uppercase << value;
+  return ss.str();
+}
+
+std::string toDecimalString(unsigned long long value) {
+  return std::to_string(value);
+}
+
+auto Waves::get_text(std::string &v, int i) {
+  auto setting = this->top->waveStates[i].base;
+  if (setting == base::bin) {
+    return "0b"+v;
+  }
+  if (is_x_state(v))
+    return v;
+  if (is_z_state(v))
+    return v;
+  if (is_partial_state(v))
+    return std::string{"?"};
+
+  unsigned long long decimalValue = std::bitset<64>(v).to_ullong();
+
+  if (setting == base::oct) {
+    return "0o"+toOctalString(decimalValue);
+  }
+  if (setting == base::dec) {
+    return toDecimalString(decimalValue);
+  }
+
+  if (setting == base::hex) {
+    return "0x"+toHexString(decimalValue);
+  }
+
+  
+  return std::string{"E"};
 }
 
 auto Waves::letter(std::string &v) {
@@ -130,7 +191,6 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
     Path path = Path(this->top->waveStates[i].color);
     Path auxPath = Path(this->top->waveStates[i].color);
-
 
     double prevScenePos = 0;
     double otherPrevScenePos = 0;
@@ -242,12 +302,13 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                     (otherPrevString != dump.vecs[idx].valueVec)) {
                   path.lineTo(scenePos, yHalf, c);
                   auxPath.lineTo(scenePos, yHalf, c);
+                  std::string s = get_text(otherPrevString, i);
+
                   this->addText(scenePos, prevScenePos, painter, lineHeight,
-                                WAVES_GAP, prev, prevFloat, dump, idx, y,
-                                otherPrevString, i, c);
+                                WAVES_GAP, prev, prevFloat, dump, idx, y, s, i,
+                                c);
                   prevScenePos = scenePos;
                 }
-                std::string s = letter(dump.vecs[idx].valueVec);
               }
               // otherPrevPrevString = otherPrevString;
               // otherPrevString = dump.vecs[idx].valueVec;
@@ -269,10 +330,10 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                 auxPath.lineTo(scenePos - HEXAGONS_STEP, yLow, c);
                 auxPath.lineTo(scenePos, yHalf, c);
 
-                std::string s = letter(prevString);
+                std::string s = get_text(otherPrevString, i);
                 this->addText(scenePos, prevScenePos, painter, lineHeight,
-                              WAVES_GAP, prev, prevFloat, dump, idx, y,
-                              otherPrevString, i, c);
+                              WAVES_GAP, prev, prevFloat, dump, idx, y, s, i,
+                              c);
 
                 prevScenePos = scenePos;
                 prev = dump.vecs[idx].valueVecDec;
@@ -304,10 +365,9 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
               // QTextItem
 
-              std::string s = letter(prevString);
+              std::string s = get_text(otherPrevString, i);
               this->addText(scenePos, prevScenePos, painter, lineHeight,
-                            WAVES_GAP, prev, prevFloat, dump, idx, y,
-                            otherPrevString, i, c);
+                            WAVES_GAP, prev, prevFloat, dump, idx, y, s, i, c);
 
               prevScenePos = scenePos;
               prev = dump.vecs[idx].valueVecDec;
@@ -406,12 +466,12 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
       } else {
         if (!scalInited) {
-          path.moveTo(0,  yHalf);
-        path.lineTo(width, yPrev, Qt::red);
-        
+          path.moveTo(0, yHalf);
+          path.lineTo(width, yPrev, Qt::red);
+
         } else {
 
-        path.lineTo(width, yPrev, color(otherPrevString, i));
+          path.lineTo(width, yPrev, color(otherPrevString, i));
         }
       }
 
@@ -438,15 +498,15 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         path.lineTo(width, y, c);
         auxPath.lineTo(width, yLow, c);
       }
-      std::string s = letter(otherPrevString);
+      std::string s = get_text(otherPrevString, i);
 
       if (!inited) {
 
         this->addText(width, prevScenePos, painter, lineHeight, WAVES_GAP, prev,
-                      prevFloat, {}, -1, y, otherPrevString, i, c);
+                      prevFloat, {}, -1, y, s, i, c);
       } else {
         this->addText(width, prevScenePos, painter, lineHeight, WAVES_GAP, prev,
-                      prevFloat, {}, -1, y, otherPrevString, i, c);
+                      prevFloat, {}, -1, y, s, i, c);
       }
     }
     path.drawPath(painter);

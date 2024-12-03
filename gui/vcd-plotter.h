@@ -16,6 +16,7 @@ enum class base {
   bin,
   oct,
   dec,
+  sig,
   hex,
 };
 struct WaveState {

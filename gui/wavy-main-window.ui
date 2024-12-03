@@ -209,6 +209,9 @@
      <string>Selected dump(s)...</string>
     </property>
     <widget class="QMenu" name="menuChange_color">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Change color...</string>
      </property>
@@ -336,6 +339,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionDecimal_signed">
+   <property name="text">
+    <string>Decimal signed</string>
    </property>
   </action>
  </widget>
