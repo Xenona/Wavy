@@ -71,7 +71,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
   int HEXAGONS_STEP;
 
   double lineHeight = this->top->itemRect.height();
-  double y = WAVES_GAP+lineHeight;
+  double y = WAVES_GAP*2+lineHeight;
   int a = this->top->top->leftFOVborder;
   int b = this->top->top->rightFOVborder;
   if (this->top->data->timepoints.size())

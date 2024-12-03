@@ -52,7 +52,7 @@ public:
 
   QString path;
 private:
-  int MAX_ZOOM_DELTA = 30;
+  int MAX_ZOOM_DELTA = 20;
 
   VCDData *data;
   VCDGraphicsView *view;

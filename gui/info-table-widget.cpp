@@ -91,28 +91,26 @@ InfoTableWidget::InfoTableWidget(VCDData *data) {
       std::to_string(data->timescale.precision) + " " + data->timescale.unit));
   QTableWidgetItem *___qtablewidgetitem11 = this->item(3, 0);
   QString cms;
-  for (auto& c: data->comments) {
+  for (auto &c : data->comments) {
     cms += c.comment + '\n';
   }
   ___qtablewidgetitem11->setText(cms);
   QTableWidgetItem *___qtablewidgetitem12 = this->item(4, 0);
   QString warns;
-  for (auto& w: data->warns) {
+  for (auto &w : data->warns) {
     warns += w + '\n';
   }
   ___qtablewidgetitem12->setText(warns);
   QTableWidgetItem *___qtablewidgetitem13 = this->item(5, 0);
   QString errors;
-  for (auto& e: data->errors) {
+  for (auto &e : data->errors) {
     errors += e + '\n';
   }
   ___qtablewidgetitem13->setText(warns);
   QTableWidgetItem *___qtablewidgetitem14 = this->item(6, 0);
-  if (data->timepoints.size()) 
-  ___qtablewidgetitem14->setText(QString::fromStdString(std::to_string(data->timepoints.back().time)));
-
-  
-
+  if (data->timepoints.size())
+    ___qtablewidgetitem14->setText(
+        QString::fromStdString(std::to_string(data->timepoints.back().time)));
 
   this->setSortingEnabled(__sortingEnabled);
   this->resizeRowToContents(0);
