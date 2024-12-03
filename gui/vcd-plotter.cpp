@@ -270,6 +270,7 @@ void VCDPlotter::wheelEvent(QWheelEvent *event) {
   // if shift, scroll left/right, if ctrl, zoom in out
   // where mouse points, if just like that, zoom in out
   // where marker is
+  if (!this->dumpsList.size()) return;
   int one = event->inverted() ? 1 : -1;
 
   bool shift = event->modifiers() & Qt::ShiftModifier;

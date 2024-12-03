@@ -4,6 +4,7 @@
 #include <QPainterPath>
 #include <climits>
 #include <cmath>
+#include <cstdlib>
 #include <qfontmetrics.h>
 #include <qgraphicsitem.h>
 #include <qlogging.h>
@@ -83,6 +84,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     HEXAGONS_STEP = 1;
   }
   int width = this->top->size().width();
+  if (this->top->list.size()) {
 
   int amount =
       std::max(1, static_cast<int>((float(this->top->top->maxrightborder -
@@ -103,6 +105,10 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
   double tickDistance = double(b - a) / numTicks;
 
   painter->save();
+  QFont font = painter->font();
+  font.setPixelSize(std::abs(lineHeight - WAVES_GAP*4));
+  painter->setFont(font);
+  QFontMetricsF fm(font);
   for (double i = a; i <= b; i += tickDistance) {
     double scenePos = ((i - a) / (double)(b - a)) * width;
 
@@ -111,10 +117,6 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
     QString label = QString::number(i, 'i', (b - a > 100) ? 0 : 2);
 
-    QFont font = painter->font();
-    font.setPixelSize(-(lineHeight - WAVES_GAP*4));
-    painter->setFont(font);
-    QFontMetricsF fm(font);
     double valWidth = fm.horizontalAdvance(label);
 
     QRectF rect = {scenePos - valWidth / 2, 0, valWidth, lineHeight};
@@ -122,6 +124,7 @@ void Waves::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->drawText(rect, Qt::AlignCenter, label);
   }
   painter->restore();
+  }
 
   for (int i = this->top->scrollHeight; i < this->top->vars.length(); i++) {
 
@@ -417,7 +420,7 @@ void Waves::addText(double scenePos, double prevScenePos, QPainter *painter,
   // QTextItem
   painter->save();
   QFont font = painter->font();
-  font.setPixelSize(lineHeight - WAVES_GAP * 3);
+  font.setPixelSize((lineHeight - WAVES_GAP * 3));
 
   painter->setFont(font);
   QFontMetricsF fm(font);

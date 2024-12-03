@@ -150,6 +150,11 @@ bool WavyMainWindow::eventFilter(QObject *obj, QEvent *event) {
           for (auto item : items) {
             delete item;
           }
+          if (!this->vcdDataFiles.value(_VCDDataActive).tab->dumpsList.size()) {
+            this->vcdDataFiles.value(_VCDDataActive).tab->leftFOVborder = 0;
+            this->vcdDataFiles.value(_VCDDataActive).tab->rightFOVborder = this->vcdDataFiles.value(_VCDDataActive).vcddata->timepoints.back().time;
+          }
+
           this->vcdDataFiles.value(_VCDDataActive).tab->plotUpdate();
         }
       } else if (obj == this->vcdDataFiles.value(_VCDDataActive).scopeTree) {
